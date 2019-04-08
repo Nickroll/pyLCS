@@ -15,5 +15,15 @@ JSON Links
 * Base - https://acs.leagueoflegends.com/v1/stats/game/
 * Ext - ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976 (Recieved from the link page)
 * Base - https://acs.leagueoflegends.com/v1/stats/game/
-* Ext - ESPORTSTMNT02/992625/timeline?gameHash=76f99e0eb8658976 
+* Ext - ESPORTSTMNT02/992625/timeline?gameHash=76f99e0eb8658976
 
+
+TODO
+=================
+* Write the basic web crawler function
+	*
+	*
+	*
+* Create the SQLite storage option
+* Create the stats packages
+*
