@@ -21,8 +21,29 @@ dependencies:
   - xz=5.2.4=h1de35cc_4
   - zlib=1.2.11=h1de35cc_3
   - pip:
+    - appdirs==1.4.3
+    - beautifulsoup4==4.7.1
+    - bs4==0.0.1
+    - chardet==3.0.4
+    - cssselect==1.0.3
+    - fake-useragent==0.1.11
     - greenlet==0.4.15
+    - idna==2.8
+    - lxml==4.3.3
     - msgpack==0.6.1
+    - parse==1.12.0
+    - pyee==5.0.0
     - pynvim==0.3.2
+    - pyppeteer==0.0.25
+    - pyquery==1.4.0
+    - python-dotenv==0.10.1
+    - requests==2.21.0
+    - requests-html==0.10.0
+    - six==1.12.0
+    - soupsieve==1.9
+    - tqdm==4.31.1
+    - urllib3==1.24.1
+    - w3lib==1.20.0
+    - websockets==7.0
 prefix: /Users/rollernt/miniconda3/envs/pyLCS
 
