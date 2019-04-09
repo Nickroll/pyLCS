@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import requests_html
+from requests_html import HTMLSession
 
 
 def _create_connection(url: str, render: bool=False):
@@ -12,3 +12,8 @@ def _create_connection(url: str, render: bool=False):
     :param render (bool): If the JS should be rendered or not.
     """
 
+    session = HTMLSession()
+    r = session.get(url)
+
+    if render:
+        r.html.render()
