@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from requests_html import HTMLSession
+from requests_html import HTMLResponse, HTMLSession
 
 
-def _create_connection(url: str, render: bool=False):
+def _create_connection(url: str, render: bool=False) -> HTMLResponse:
     """_create_connection
 
     Establishes a requests connection to the given page and returns the requests object
@@ -17,3 +17,5 @@ def _create_connection(url: str, render: bool=False):
 
     if render:
         r.html.render()
+
+    return r
