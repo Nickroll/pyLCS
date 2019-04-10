@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+from typing import Union
 
 from requests_html import HTMLResponse, HTMLSession
 
 
-def _create_connection(url: str, render: bool=False) -> HTMLResponse:
+def _create_connection(url: str, render: bool=False) -> Union[HTMLResponse, None]:
     """_create_connection
 
     Establishes a requests connection to the given page and returns the requests object
@@ -18,4 +19,7 @@ def _create_connection(url: str, render: bool=False) -> HTMLResponse:
     if render:
         r.html.render()
 
-    return r
+    if r.ok:
+        return r
+    else:
+        return None
