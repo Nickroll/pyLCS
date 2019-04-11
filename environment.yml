@@ -22,6 +22,8 @@ dependencies:
   - zlib=1.2.11=h1de35cc_3
   - pip:
     - appdirs==1.4.3
+    - atomicwrites==1.3.0
+    - attrs==19.1.0
     - beautifulsoup4==4.7.1
     - bs4==0.0.1
     - chardet==3.0.4
@@ -29,16 +31,24 @@ dependencies:
     - fake-useragent==0.1.11
     - greenlet==0.4.15
     - idna==2.8
+    - jedi==0.13.3
     - lxml==4.3.3
+    - more-itertools==7.0.0
     - msgpack==0.6.1
     - parse==1.12.0
+    - parso==0.4.0
+    - pluggy==0.9.0
+    - py==1.8.0
     - pyee==5.0.0
     - pynvim==0.3.2
     - pyppeteer==0.0.25
     - pyquery==1.4.0
+    - pytest==4.4.0
+    - pytest-mock==1.10.3
     - python-dotenv==0.10.1
     - requests==2.21.0
     - requests-html==0.10.0
+    - responses==0.10.6
     - six==1.12.0
     - soupsieve==1.9
     - tqdm==4.31.1
@@ -46,4 +56,3 @@ dependencies:
     - w3lib==1.20.0
     - websockets==7.0
 prefix: /Users/rollernt/miniconda3/envs/pyLCS
-
