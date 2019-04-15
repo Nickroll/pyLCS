@@ -8,6 +8,7 @@ class pyLCS(object):
     def __init__(self, region: str=None):
         self.region = region
 
+    @property
     def _create_connection(url: str, render: bool=False) -> Union[HTMLResponse, None]:
         """_create_connection
 
@@ -15,6 +16,7 @@ class pyLCS(object):
 
         :param url (str): The url to connect too.
         :param render (bool): If the JS should be rendered or not.
+        :rtype: Union[HTMLResponse, None]
         """
 
         session = HTMLSession()
@@ -27,3 +29,5 @@ class pyLCS(object):
             return r
         else:
             return None
+
+    def _post_match_game_links(self, )
