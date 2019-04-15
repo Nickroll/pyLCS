@@ -71,3 +71,9 @@ def test_ext_link_creation_lpl():
     return_links = pyc._ext_link_creation()
 
     assert check_list.sort() == return_links.sort()
+
+
+def test_ext_link_creation_playoffs():
+    check_list = ['https://liquipedia.net/leagueoflegends/LCS/2019/Spring/Playoffs']
+
+    pyc = pyCrawler(region='lcs', year='2019', split='spring', playoffs=True)

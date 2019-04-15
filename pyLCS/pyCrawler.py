@@ -39,7 +39,7 @@ class pyCrawler(object):
         """_post_match_game_links
 
         Uses liquidpedia to retrieve the links to the post match game links for the given region
-        
+
         :rtype: Union[tuple, str]
         """
 
