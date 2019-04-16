@@ -77,3 +77,9 @@ def test_ext_link_creation_playoffs():
     check_list = ['https://liquipedia.net/leagueoflegends/LCS/2019/Spring/Playoffs']
 
     pyc = pyCrawler(region='lcs', year='2019', split='spring', playoffs=True)
+    ext, p_ext = pyc._ext_link_creation()
+
+    assert check_list[0] == p_ext
+
+
+def test_retrieve_post_

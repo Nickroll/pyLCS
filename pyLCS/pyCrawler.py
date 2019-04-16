@@ -1,9 +1,8 @@
 #!/usr/bin/env python
+from exceptions import pyLCSExceptions
 from typing import Union
 
 from requests_html import HTMLResponse, HTMLSession
-
-from .exceptions import pyLCSExceptioins
 
 
 class pyCrawler(object):
@@ -14,7 +13,7 @@ class pyCrawler(object):
         self.split = split
         self.playoffs = playoffs
 
-    def _create_connection(url: str, render: bool=False) -> Union[HTMLResponse, None]:
+    def _create_connection(self, url: str=None, render: bool=False) -> Union[HTMLResponse, None]:
         """_create_connection
 
         Establishes a requests connection to the given page and returns the requests object
@@ -60,8 +59,8 @@ class pyCrawler(object):
         elif self.region.lower() == 'academy':
             ext = f'{base_link}LCS/Academy_League/{self.year}/{self.split.capitalize()}/Group_Stage'
         else:
-            raise pyLCSExceptioins.RegionError(f'{self.region} is not one of LCS, LCK, LMS, '
-                                               'LPL, LEC, or academy')
+            raise pyLCSExceptions.RegionError(f'{self.region} is not one of LCS, LCK, LMS, '
+                                              'LPL, LEC, or academy')
 
         if self.playoffs:
             p_ext = f'{ext[:-11]}Playoffs'
@@ -69,3 +68,14 @@ class pyCrawler(object):
             return (ext, p_ext)
         else:
             return ext
+
+    def _retrieve_post_match_site_links(self, ext_link: str=None, render: bool=False):
+        """_retrieve_post_match_stats
+
+        Uses the links created by _ext_link_creation to get the links to the post match games
+        """
+
+        r = self._create_connection(url=ext_link, render=render)
+
+        links = r.html.xpath('//a[@title="Match History"]/@href')
+        return links
