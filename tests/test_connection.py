@@ -2,14 +2,14 @@
 import context
 import pytest
 import responses
-from pyLCS.exceptions import pyLCSExceptioins
+from pyLCS.exceptions import pyLCSExceptions
 from pyLCS.pyCrawler import pyCrawler
 
 
 @responses.activate
 def test_create_connection_returns():
     responses.add(responses.GET, 'http://test.com', status=200)
-    resp = pyCrawler._create_connection('http://test.com')
+    resp = pyCrawler._create_connection(url='http://test.com')
 
     assert resp is not None
 
@@ -17,7 +17,7 @@ def test_create_connection_returns():
 @responses.activate
 def test_create_connection_bad_return():
     responses.add(responses.GET, 'http://testfail.com', status=404)
-    resp = pyCrawler._create_connection('http://testfail.com')
+    resp = pyCrawler._create_connection(url='http://testfail.com')
 
     assert resp is None
 
@@ -82,4 +82,16 @@ def test_ext_link_creation_playoffs():
     assert check_list[0] == p_ext
 
 
-def test_retrieve_post_
+HTML_BODY = '<html><body><a href="https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976&amp;tab=overview" title="Match History" target="_blank" rel="nofollow noreferrer noopener"><img alt="Match History" src="/commons/images/c/ce/Match_Info_Stats.png" width="32" height="32"></a></body></html>'
+
+
+@responses.activate
+def test_retrieve_post_returns_list():
+    responses.add(responses.GET, 'http://test.com', stats=200, body=HTML_BODY)
+
+    pyc = pyCrawler(region='lcs', year='2019', split='spring', playoffs=False)
+    ext = pyc._ext_link_creation()
+
+    links = pyc._retrieve_post_match_site_links(ext, True)
+
+    assert isinstance(links, list)

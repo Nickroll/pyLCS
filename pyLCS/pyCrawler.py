@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-from exceptions import pyLCSExceptions
 from typing import Union
 
 from requests_html import HTMLResponse, HTMLSession
+
+from .exceptions import pyLCSExceptions
 
 
 class pyCrawler(object):
