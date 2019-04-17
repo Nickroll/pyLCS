@@ -77,6 +77,9 @@ class pyCrawler(object):
         """
 
         r = self._create_connection(url=ext_link, render=render)
-
         links = r.html.xpath('//a[@title="Match History"]/@href')
+
+        if len(links) == 0:
+            raise(pyLCSExceptions.LinkLenError('Length of links retrieved was 0.'))
+
         return links

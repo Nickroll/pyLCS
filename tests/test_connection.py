@@ -87,6 +87,9 @@ def test_ext_link_creation_playoffs(make_pyCrawler_base):
 
 
 HTML_BODY = '<html><body><a href="https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976&amp;tab=overview" title="Match History" target="_blank" rel="nofollow noreferrer noopener"><img alt="Match History" src="/commons/images/c/ce/Match_Info_Stats.png" width="32" height="32"></a></body></html>'
+HTML_RETURN = ['https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976&tab=overview',
+               'https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTSTMNT02/992641?gameHash=19f754ef4c0360d7',
+               'https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTSTMNT02/992659?gameHash=4c30fc1e819c44c5&tab=overview']
 
 
 @responses.activate
@@ -95,3 +98,11 @@ def test_retrieve_post_returns_list(make_pyCrawler_base):
     links = make_pyCrawler_base._retrieve_post_match_site_links('http://test.com', False)
 
     assert isinstance(links, list)
+
+
+@responses.activate
+def test_retrieve_post_returns_correct(make_pyCrawler_base):
+    responses.add(responses.GET, 'http://test.com', status=200, body=HTML_BODY)
+    links = make_pyCrawler_base._retrieve_post_match_site_links('http://test.com', False)
+
+    assert links[0] == HTML_RETURN[0]
