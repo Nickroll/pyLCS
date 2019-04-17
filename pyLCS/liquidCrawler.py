@@ -6,7 +6,12 @@ from requests_html import HTMLResponse, HTMLSession
 from .exceptions import pyLCSExceptions
 
 
-class pyCrawler(object):
+class liquidCrawler(object):
+    """liquidCrawler
+
+    Basic class for creating and retriving the post match history links from liquidpedia
+    """
+
     def __init__(self, region: str=None, year: Union[str, int]=None, split: str=None,
                  playoffs: bool=False):
         self.region = region
@@ -14,14 +19,14 @@ class pyCrawler(object):
         self.split = split
         self.playoffs = playoffs
 
-    def _create_connection(self, url: str=None, render: bool=False) -> Union[HTMLResponse, None]:
+    def _create_connection(self, url: str=None, render: bool=None) -> Union[HTMLResponse, None]:
         """_create_connection
 
         Establishes a requests connection to the given page and returns the requests object
 
         :param url (str): The url to connect too.
         :param render (bool): If the JS should be rendered or not.
-        :rtype: Union[HTMLResponse, None]
+        :rtype Union[HTMLResponse, None]
         """
 
         session = HTMLSession()
@@ -40,7 +45,7 @@ class pyCrawler(object):
 
         Uses liquidpedia to retrieve the links to the post match game links for the given region
 
-        :rtype: Union[tuple, str]
+        :rtype Union[tuple, str]
         """
 
         base_link = 'https://liquipedia.net/leagueoflegends/'
@@ -70,7 +75,7 @@ class pyCrawler(object):
         else:
             return ext
 
-    def _retrieve_post_match_site_links(self, ext_link: str=None, render: bool=False):
+    def _retrieve_post_match_site_links(self, ext_link: str=None, render: bool=None):
         """_retrieve_post_match_stats
 
         Uses the links created by _ext_link_creation to get the links to the post match games
@@ -81,5 +86,19 @@ class pyCrawler(object):
 
         if len(links) == 0:
             raise(pyLCSExceptions.LinkLenError('Length of links retrieved was 0.'))
+
+        return links
+
+    def match_links(self, render: bool=True) -> list:
+        """match_links
+
+        Retrieves the links to the match history pages from the liquidpedia website.
+
+        :param render (bool): If JavaScript should be rendered on the page
+        :rtype list
+        """
+
+        exts = self._ext_link_creation()
+        links = self._retrieve_post_match_site_links(ext_link=exts, render=render)
 
         return links
