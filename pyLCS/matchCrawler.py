@@ -17,3 +17,10 @@ class postMatchCrawl:
             match_links = [match_links]
 
         self.match_links = match_links
+
+    def _create_json_links(self) -> tuple:
+        """_create_json_links
+
+        Uses the match links to make the JSON links for the match history data
+        :rtype tuple
+        """
