@@ -48,3 +48,27 @@ class postMatchCrawl:
                 continue
 
         return (match_history, timelines)
+
+    def _json_retrival(self, link: Union[list, str]=None) -> list:
+        """_json_retrival
+
+        Retrieves the JSON form the link provided and returns the dicts in a list
+
+        :param link (Union[list, str]): The link or a list of links to serach
+        :rtype list
+        """
+        if isinstance(link, str):
+            link = [link]
+
+        session = HTMLSession()
+        json_resp = list()
+
+        for l in link:
+            r = session.get(l)
+
+            if r.ok:
+                json_resp.append(r.json())
+            else:
+                json_resp.append(None)
+
+        return json_resp
