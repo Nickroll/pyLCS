@@ -17,6 +17,9 @@ class postMatchCrawl:
         if isinstance(match_links, str):
             match_links = [match_links]
 
+        if not isinstance(match_links, list):
+            raise TypeError('Match links is not of type list or string')
+
         self.match_links = match_links
 
     def _create_json_links(self) -> tuple:
@@ -37,11 +40,17 @@ class postMatchCrawl:
             relm_part = l.find('ESPORTSTMNT')
             if relm_part != -1:
                 q_loc = l.find('?')
-                post_link = l[relm_part:q_loc]
-                hash_part = l[q_loc + 1:]
 
-                timelines.append(f'{acs_base}/{post_link}/timeline?{hash_part}')
-                match_history.append(f'{acs_base}/{post_link}?{hash_part}')
+                if q_loc != -1:
+                    post_link = l[relm_part:q_loc]
+                    hash_part = l[q_loc + 1:]
+
+                    timelines.append(f'{acs_base}/{post_link}/timeline?{hash_part}')
+                    match_history.append(f'{acs_base}/{post_link}?{hash_part}')
+
+                else:
+                    warn(f'{l} is not a valid post match link')
+                    continue
 
             else:
                 warn(f'{l} is not a valid post match link')
