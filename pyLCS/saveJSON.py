@@ -13,7 +13,7 @@ def flatten_json(y: dict=None) -> dict:
     """
     out = dict()
 
-    def flatten(x: Union(dict, list)=None, name: str=''):
+    def flatten(x: Union[dict, list]=None, name: str=''):
         """flatten
 
         The actually flattening fucntion

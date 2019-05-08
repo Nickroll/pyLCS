@@ -8,4 +8,5 @@ mls = lc.match_links(render=True)
 
 mc = matchCrawler.postMatchCrawl(mls[:2])
 json_data = mc.download_json_data()
-print(json_data['Timeline'])
+
+print(saveJSON.flatten_json(json_data))
