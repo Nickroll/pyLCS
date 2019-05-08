@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from time import sleep
 from typing import Union
 from warnings import warn
 
@@ -71,6 +72,7 @@ class postMatchCrawl:
 
         session = HTMLSession()
         json_resp = list()
+        to_rerun = list()
 
         for l in link:
             r = session.get(l)
@@ -78,6 +80,30 @@ class postMatchCrawl:
             if r.ok:
                 json_resp.append(r.json())
             else:
+                sleep(5)
+                to_rerun.append(l)
+
+        if to_rerun:
+            r = session.get(l)
+            if r.ok:
+                json_resp.append(r.json())
+            else:
                 json_resp.append(None)
+                warn(f'{l} is not a valid link to a JSON page. None was inserted into response')
 
         return json_resp
+
+    def download_json_data(self) -> dict:
+        """download_json_data
+
+        Downloads the JSON data from the match links provided
+
+        :rtype dict
+        """
+
+        return_dict = dict()
+        match_history, timelines = self._create_json_links()
+        return_dict['MatchHistory'] = self._json_retrival(match_history)
+        return_dict['Timeline'] = self._json_retrival(timelines)
+
+        return return_dict
