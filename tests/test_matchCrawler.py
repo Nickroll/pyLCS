@@ -91,9 +91,8 @@ def test_json_resp_type(make_postMatchCrawl_base):
 def test_json_resp_has_none_on_fail(make_postMatchCrawl_base):
     responses.add(responses.GET, 'http://jsonlinksfail.com', status=404, json={'frames': 'frame1'})
     mh, tl = make_postMatchCrawl_base._create_json_links()
-    resp = make_postMatchCrawl_base._json_retrival('http://jsonlinksfail.com')
-
-    assert resp[0] is None
+    with pytest.warns(UserWarning):
+        make_postMatchCrawl_base._json_retrival('http://jsonlinksfail.com')
 
 
 @responses.activate
