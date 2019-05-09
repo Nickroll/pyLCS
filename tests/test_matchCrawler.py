@@ -66,8 +66,6 @@ def test_create_json_links(make_postMatchCrawl_base):
     assert resp[1] == [TIME_JSON_LINK]
     assert isinstance(resp, tuple)
 
-# TODO: Write better tests for _create_json_links
-
 
 @responses.activate
 def test_json_resp(make_postMatchCrawl_base):
