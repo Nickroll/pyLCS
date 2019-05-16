@@ -7,103 +7,82 @@ from warnings import warn
 from requests_html import HTMLSession
 
 
-class postMatchCrawl:
-    """postMatchCrawl
+def _create_json_links(link: str=None) -> Union[tuple, None]:
+    """_create_json_links
 
-    Crawls the post match links generated from liquidCrawler and gets the JSON data returned
+    Uses the match link to make the JSON links for the match history data
+
+    Example: https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976
+    https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT02/992625/timeline?gameHash=76f99e0eb86589
+
+    :param link (str): The link to convert to match history and timeline links
+    :rtype Union[tuple, None]: (match_history, timelines)
     """
 
-    def __init__(self, match_links: Union[list, str]=None):
+    acs_base = 'https://acs.leagueoflegends.com/v1/stats/game'
 
-        if isinstance(match_links, str):
-            match_links = [match_links]
+    relm_part = link.find('ESPORTSTMNT')
+    if relm_part != -1:
+        q_loc = link.find('?')
 
-        if not isinstance(match_links, list):
-            raise TypeError('Match links is not of type list or string')
+        if q_loc != -1:
+            post_link = link[relm_part:q_loc]
+            hash_part = link[q_loc + 1:]
 
-        self.match_links = match_links
+            timelines = f'{acs_base}/{post_link}/timeline?{hash_part}'
+            match_history = f'{acs_base}/{post_link}?{hash_part}'
 
-    def _create_json_links(self) -> tuple:
-        """_create_json_links
+            return (match_history, timelines)
 
-        Uses the match links to make the JSON links for the match history data
+        else:
+            warn(f'{link} is not a valid post match link')
+            return (None, None)
+    else:
+        warn(f'{link} is not a valid post match link')
+        return (None, None)
 
-        Example: https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976
-        https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT02/992625/timeline?gameHash=76f99e0eb86589
-        :rtype tuple: (match_history, timelines)
-        """
 
-        acs_base = 'https://acs.leagueoflegends.com/v1/stats/game'
-        timelines = list()
-        match_history = list()
+def _json_retrival(link: str=None) -> Union[dict, None]:
+    """_json_retrival
 
-        for l in self.match_links:
-            relm_part = l.find('ESPORTSTMNT')
-            if relm_part != -1:
-                q_loc = l.find('?')
+    Retrieves the JSON form the link provided and returns the dicts in a list
 
-                if q_loc != -1:
-                    post_link = l[relm_part:q_loc]
-                    hash_part = l[q_loc + 1:]
+    :param link (str): The link to get the JSON data from
+    :rtype Union[dict, None]
+    """
 
-                    timelines.append(f'{acs_base}/{post_link}/timeline?{hash_part}')
-                    match_history.append(f'{acs_base}/{post_link}?{hash_part}')
+    session = HTMLSession()
 
-                else:
-                    warn(f'{l} is not a valid post match link')
-                    continue
+    r = session.get(link)
 
-            else:
-                warn(f'{l} is not a valid post match link')
-                continue
+    if r.ok:
+        return r.json()
+    else:
+        sleep(5)
+        to_rerun = link
 
-        return (match_history, timelines)
+    if to_rerun:
+        r = session.get(link)
 
-    def _json_retrival(self, link: Union[list, str]=None) -> list:
-        """_json_retrival
+    if r.ok:
+        return r.json()
+    else:
+        warn(f'{link} is not a valid link to a JSON page. None was inserted into response')
+        return None
 
-        Retrieves the JSON form the link provided and returns the dicts in a list
 
-        :param link (Union[list, str]): The link or a list of links to serach
-        :rtype list
-        """
-        if isinstance(link, str):
-            link = [link]
+def download_json_data(match_link: str=None) -> dict:
+    """download_json_data
 
-        session = HTMLSession()
-        json_resp = list()
-        to_rerun = list()
+    Downloads the JSON data from the match links provided
 
-        for l in link:
-            r = session.get(l)
+    :param match_link (str): The link to the match history page
+    :rtype dict
+    """
 
-            if r.ok:
-                json_resp.append(r.json())
-            else:
-                sleep(5)
-                to_rerun.append(l)
+    return_dict = dict()
+    match_history, timelines = _create_json_links(match_link)
+    return_dict['MatchHistory'] = _json_retrival(match_history)
+    return_dict['Timeline'] = _json_retrival(timelines)
 
-        if to_rerun:
-            r = session.get(l)
-            if r.ok:
-                json_resp.append(r.json())
-            else:
-                json_resp.append(None)
-                warn(f'{l} is not a valid link to a JSON page. None was inserted into response')
-
-        return json_resp
-
-    def download_json_data(self) -> dict:
-        """download_json_data
-
-        Downloads the JSON data from the match links provided
-
-        :rtype dict
-        """
-
-        return_dict = dict()
-        match_history, timelines = self._create_json_links()
-        return_dict['MatchHistory'] = self._json_retrival(match_history)
-        return_dict['Timeline'] = self._json_retrival(timelines)
-
-        return return_dict
+    return return_dict

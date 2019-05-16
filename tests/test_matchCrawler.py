@@ -3,103 +3,67 @@
 import context
 import pytest
 import responses
-from pyLCS.matchCrawler import postMatchCrawl
+from pyLCS.matchCrawler import (_create_json_links, _json_retrival,
+                                download_json_data)
 
 MATCH_LINK_TEST = 'https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976'
 MATCH_LINK_TEST_NO_RELM = 'https://matchhistory.euw.leagueoflegends.com/en/#match-details/TMNT02/992625?gameHash=76f99e0eb8658976'
 MATCH_LINK_TEST_NO_Q = 'https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTMNT02/992625gameHash=76f99e0eb8658976'
 
-
-@pytest.fixture
-def make_postMatchCrawl_base():
-    return postMatchCrawl(MATCH_LINK_TEST)
+MH_JSON_LINK = 'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976'
+TL_JSON_LINK = 'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT02/992625/timeline?gameHash=76f99e0eb8658976'
 
 
-@pytest.fixture
-def make_postMatchCrawl_base_fail_relm():
-    return postMatchCrawl(MATCH_LINK_TEST_NO_RELM)
+def test_create_json_links_pass():
+    mh, tl = _create_json_links(MATCH_LINK_TEST)
+    assert mh == MH_JSON_LINK
+    assert tl == TL_JSON_LINK
 
 
-@pytest.fixture
-def make_postMatchCrawl_base_fail_q():
-    return postMatchCrawl(MATCH_LINK_TEST_NO_Q)
-
-
-def test_post_match_handles_str(make_postMatchCrawl_base):
-    assert isinstance(make_postMatchCrawl_base.match_links, list)
-
-
-def test_post_match_handles_list(make_postMatchCrawl_base):
-    make_postMatchCrawl_base.match_links = ['ab', 'bc']
-    assert isinstance(make_postMatchCrawl_base.match_links, list)
-
-
-def test_wrong_match_links_type():
-    with pytest.raises(TypeError):
-        postMatchCrawl(match_links=1)
-
-
-TIME_JSON_LINK = 'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT02/992625/timeline?gameHash=76f99e0eb8658976'
-MATCH_JSON_LINK = 'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976'
-
-
-def test_create_json_warns(make_postMatchCrawl_base):
+def test_create_json_links_warn_relm():
     with pytest.warns(UserWarning):
-        make_postMatchCrawl_base.match_links = ['hasnorelativeparts']
-        make_postMatchCrawl_base._create_json_links()
+        mh, tl = _create_json_links(MATCH_LINK_TEST_NO_RELM)
+        assert mh is None
+        assert tl is None
 
 
-def test_create_json_no_relm_part(make_postMatchCrawl_base_fail_relm):
+def test_create_json_link_warn_q():
     with pytest.warns(UserWarning):
-        make_postMatchCrawl_base_fail_relm._create_json_links()
-
-
-def test_create_json_no_q_part(make_postMatchCrawl_base_fail_q):
-    with pytest.warns(UserWarning):
-        make_postMatchCrawl_base_fail_q._create_json_links()
-
-
-def test_create_json_links(make_postMatchCrawl_base):
-    resp = make_postMatchCrawl_base._create_json_links()
-
-    assert resp[0] == [MATCH_JSON_LINK]
-    assert resp[1] == [TIME_JSON_LINK]
-    assert isinstance(resp, tuple)
+        mh, tl = _create_json_links(MATCH_LINK_TEST_NO_Q)
+        assert mh is None
+        assert tl is None
 
 
 @responses.activate
-def test_json_resp(make_postMatchCrawl_base):
-    responses.add(responses.GET, 'http://jsonlinks.com', status=200, json={'frames': 'frame1'})
-    mh, tl = make_postMatchCrawl_base._create_json_links()
-    resp = make_postMatchCrawl_base._json_retrival('http://jsonlinks.com')
+def test_json_retrival_returns_valid():
+    responses.add(responses.GET, 'http://www.validjsonlink.com', status=200,
+                  json={'playerstats': 10})
+    resp = _json_retrival('http://www.validjsonlink.com')
 
-    assert resp[0]['frames'] == 'frame1'
-
-
-@responses.activate
-def test_json_resp_type(make_postMatchCrawl_base):
-    responses.add(responses.GET, 'http://jsonlinks.com', status=200, json={'frames': 'frame1'})
-    mh, tl = make_postMatchCrawl_base._create_json_links()
-    resp = make_postMatchCrawl_base._json_retrival('http://jsonlinks.com')
-
-    assert isinstance(resp, list)
+    assert isinstance(resp, dict)
+    assert resp['playerstats'] == 10
 
 
 @responses.activate
-def test_json_resp_has_none_on_fail(make_postMatchCrawl_base):
-    responses.add(responses.GET, 'http://jsonlinksfail.com', status=404, json={'frames': 'frame1'})
-    mh, tl = make_postMatchCrawl_base._create_json_links()
+def test_json_retrival_warns_invalid():
+    responses.add(responses.GET, 'http://www.invalidjsonlink.com', status=404,
+                  json={'playerstats': 10})
+
     with pytest.warns(UserWarning):
-        make_postMatchCrawl_base._json_retrival('http://jsonlinksfail.com')
+        resp = _json_retrival('http://www.invalidjsonlink.com')
+
+    assert resp is None
 
 
 @responses.activate
-def test_json_resp_handles_list(make_postMatchCrawl_base):
-    responses.add(responses.GET, 'http://jsonlinks.com', status=200, json={'frames': 'frame1'})
-    responses.add(responses.GET, 'http://jsonlinks2.com', status=200, json={'frames': 'frame2'})
+def test_download_json_data_valid():
+    responses.add(responses.GET, MH_JSON_LINK, status=200, json={'pstats': 10, 'tstats': 100})
+    responses.add(responses.GET, TL_JSON_LINK, status=200, json={'tlstats1': 10, 'tlstats2': 100})
 
-    mh, tl = make_postMatchCrawl_base._create_json_links()
-    resp = make_postMatchCrawl_base._json_retrival(['http://jsonlinks.com', 'http://jsonlinks2.com'])
+    resp = download_json_data(MATCH_LINK_TEST)
 
-    assert resp[0]['frames'] == 'frame1'
-    assert resp[1]['frames'] == 'frame2'
+    assert isinstance(resp, dict)
+    assert resp['MatchHistory']['pstats'] == 10
+    assert resp['MatchHistory']['tstats'] == 100
+    assert resp['Timeline']['tlstats1'] == 10
+    assert resp['Timeline']['tlstats2'] == 100
