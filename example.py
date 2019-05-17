@@ -2,6 +2,7 @@
 
 import json
 
+import pandas as pd
 from pyLCS import liquidCrawler, matchCrawler, saveJSON
 
 lc = liquidCrawler.liquidCrawler(region='na', year=2019, split='spring', playoffs=False)
@@ -15,6 +16,4 @@ mc = matchCrawler.download_json_data(mls[0])
 # NOTES: Link player and team
 
 with open('test.json', 'w') as f:
-    json.dump(mc, f, indent=4)
-
-print(saveJSON.flatten_json(mc))
+    json.dump(mc['MatchHistory'], f, indent=4)
