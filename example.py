@@ -22,4 +22,21 @@ from pyLCS import liquidCrawler, matchCrawler, saveJSON
 #     to_dump = saveJSON.flatten_json(mc['MatchHistory'])
 #     json.dump(to_dump, f)
 
-print(pd.read_json('flat.json'))
+with open('flat.json', 'r') as jf:
+    data = json.load(jf)
+
+#p_list = list()
+#for i in range(0, 10):
+#    key = f'participantIdentities_{i}_player_summonerName'
+#    name = data[key]
+#    stats_key = f'ants_{i}_'
+#
+#    for k, v in data.items():
+#        if stats_key in k.lower():
+#            test = [name, i, k, v]
+#
+#print(test)
+
+stats = saveJSON._parse_player_json_data(data)
+print(stats['TL Doublelift'])
+print(saveJSON._column_names_match_hist(data))
