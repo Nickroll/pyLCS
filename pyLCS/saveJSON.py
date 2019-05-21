@@ -2,6 +2,7 @@
 
 import sqlite3
 from typing import Union
+from warnings import warn
 
 import pandas
 
@@ -58,23 +59,33 @@ def _make_database(path: str=None) -> Union[sqlite3.Connection, None]:
     return None
 
 
-def _create_table(conn: sqlite3.Connection=None, table_name: str=None) -> None:
+def _create_table(conn: sqlite3.Connection=None, table_name: str=None,
+                  column_list: list=None)-> None:
     """_create_table
 
     Creates a table at the given sqlite connection passed to it
 
     :param conn (sqlite3.Connection): A database to create a table at
     :param table_name (str): The name of the table to create at the database
+    :param column_list (list): A list of tuples containing (column name, type)
     :rtype None
     """
 
-    SQL = f'CREATE TABLE IF NOT EXISTS {table_name}'
+    SQL = f""" CREATE TABLE IF NOT EXISTS {table_name} (id integer PRIMARY KEY)"""
 
     try:
         c = conn.cursor()
         c.execute(SQL)
     except sqlite3.Error as e:
         print(e)
+
+    for tup in column_list:
+        SQL = f"""ALTER TABLE {table_name} ADD COLUMN '{tup[0]}' {tup[1]}"""
+        try:
+            c = conn.cursor()
+            c.execute(SQL)
+        except sqlite3.Error as e:
+            print(e)
 
 
 def _parse_player_json_data(json_data: dict=None) -> dict:
@@ -127,5 +138,32 @@ def _column_names_match_hist(json_data: dict=None) -> list:
                 ret_list.append(f'{names[-2]}_{names[-1]}')
             else:
                 ret_list.append(names[-1])
+
+    ret_list.append('PlayerName')
+    return ret_list
+
+
+def _create_column_name_and_type(column_name: list=None, stats_data: list=None) -> list:
+    """_create_column_name_and_type
+
+    Creates a list of [(column_name, column_type)] for all the columns to be used with SQL
+
+    :param column_name (list): The list of columns to be used in the SQL DB
+    :param stats_data (list): The data for them so that they can be converted to type
+    :rtype list
+    """
+
+    ret_list = list()
+
+    tup_list = list(zip(column_name, stats_data))
+
+    for tup in tup_list:
+        name = tup[0]
+        if isinstance(tup[1], int):
+            col_type = 'real'
+        else:
+            col_type = 'text'
+
+        ret_list.append((name, col_type))
 
     return ret_list

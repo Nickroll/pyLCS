@@ -38,5 +38,8 @@ with open('flat.json', 'r') as jf:
 #print(test)
 
 stats = saveJSON._parse_player_json_data(data)
-print(stats['TL Doublelift'])
-print(saveJSON._column_names_match_hist(data))
+cols = saveJSON._column_names_match_hist(data)
+col_list = saveJSON._create_column_name_and_type(cols, stats)
+print(len(col_list))
+x = list(zip(cols, stats['TL Impact']))
+print(x)
