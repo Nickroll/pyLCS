@@ -100,19 +100,19 @@ def _parse_player_json_data(json_data: dict=None) -> dict:
     """
 
     flat_json = flatten_json(json_data)
-    ret_dict = {flat_json['gameId']: None}
+    ret_dict = {flat_json['gameId']: []}
 
     for i in range(0, 10):
         key = f'participantIdentities_{i}_player_summonerName'
         player_name = flat_json[key]
         stats_key = f'ants_{i}_'
-        stats = list()
+        stats = [player_name]
 
         for k, v in flat_json.items():
             if stats_key in k.lower():
                 stats.append(v)
 
-        ret_dict[player_name] = stats
+        ret_dict[flat_json['gameId']].append(stats)
 
     return ret_dict
 
@@ -143,22 +143,28 @@ def _column_names_match_hist(json_data: dict=None) -> list:
     return ret_list
 
 
-def _create_column_name_and_type(column_name: list=None, stats_data: list=None) -> list:
+def _create_column_name_and_type(column_name: list=None, stats_data: dict=None) -> list:
     """_create_column_name_and_type
 
     Creates a list of [(column_name, column_type)] for all the columns to be used with SQL
 
-    :param column_name (list): The list of columns to be used in the SQL DB
-    :param stats_data (list): The data for them so that they can be converted to type
+    :param column_name (list): The list of columns to be used in the SQL DB returned by _column_names_match_hist
+    :param stats_data (dict): The dict returned by _parse_player_json_data
     :rtype list
     """
 
     ret_list = list()
 
-    tup_list = list(zip(column_name, stats_data))
+    # This is a terrible hack that needs to be fixed at some point
+    column_name.remove('PlayerName')
+    column_name.remove('gameId')
+
+    stats = list(stats_data.values())[0][0][1:]
+    tup_list = list(zip(column_name, stats))
 
     for tup in tup_list:
         name = tup[0]
+
         if isinstance(tup[1], int):
             col_type = 'real'
         else:
@@ -166,4 +172,26 @@ def _create_column_name_and_type(column_name: list=None, stats_data: list=None) 
 
         ret_list.append((name, col_type))
 
+    ret_list.extend([('gameId', 'real'), ('PlayerName', 'text')])
     return ret_list
+
+
+def _fix_for_sql_instertion(stats_data: dict=None) -> list:
+    """_fix_for_sql_instertion
+
+    Fixes the order of the list for insertion into the SQLite DB
+
+    :param stats_data (dict): The stats dict that is returned by _parse_player_json_data
+    :rtype list
+    """
+
+    fixed_insert = list()
+
+    for k, v in stats_data.items():
+        for i in v:
+            tmp_fix = i[1:]
+            tmp_fix.extend([k, i[0]])
+
+            fixed_insert.append(tmp_fix)
+
+    return fixed_insert
