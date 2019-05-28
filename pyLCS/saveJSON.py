@@ -195,3 +195,19 @@ def _fix_for_sql_instertion(stats_data: dict=None) -> list:
             fixed_insert.append(tmp_fix)
 
     return fixed_insert
+
+
+def make_sql_database(database: str=None, table_name: str=None,
+                      column_names: list=None) -> None:
+    """make_sql_database
+
+    Creates columns for a given table
+
+    :param database (str): The database to connect to
+    :param table_name (str): The table to create the column names for
+    :param column_names (list): The list of tuples returned by _create_column_name_and_type
+    :rtype None
+    """
+
+    conn = _make_database(database)
+    _create_table(conn, table_name, column_names)
