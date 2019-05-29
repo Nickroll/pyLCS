@@ -210,7 +210,7 @@ def make_sql_table(database: str=None, table_name: str=None, column_names: list=
 
     :param database (str): The database to connect to
     :param table_name (str): The table to create the column names for
-    :param column_names (list): The list of tuples returned by _create_column_name_and_type
+    :param column_names (list): The list of tuples returned by get_columns
     :rtype None
     """
 
@@ -224,11 +224,12 @@ def make_sql_table(database: str=None, table_name: str=None, column_names: list=
 def insert_stats(database: str=None, table_name: str=None, stats_data: dict=None) -> None:
     """insert_stats
 
-    Well insert the stats into the SQL DB connection and table provided
+    Well insert the stats into the SQL DB connection and table provided in the same order as the columns
+    made in make_sql_table.
 
     :param database (str): The name of the SQLite3 Database
     :param table_name (str): The table name to insert the data into
-    :param stats_data (dict): The stats returned by _parse_player_json_data
+    :param stats_data (dict): The stats returned by get_stats
     :rtype None
     """
 
