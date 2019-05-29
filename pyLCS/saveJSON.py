@@ -71,7 +71,7 @@ def _create_table(conn: sqlite3.Connection=None, table_name: str=None,
     :rtype None
     """
 
-    SQL = f""" CREATE TABLE IF NOT EXISTS {table_name} (id integer PRIMARY KEY)"""
+    SQL = f""" CREATE TABLE IF NOT EXISTS {table_name} (id INTEGER PRIMARY KEY AUTOINCREMENT)"""
 
     try:
         c = conn.cursor()
@@ -98,7 +98,7 @@ def _parse_player_json_data(json_data: dict=None) -> dict:
     :param json_data (dict): JSON data returned from the match history page
     :rtype dict
     """
-
+    cols = list()
     flat_json = flatten_json(json_data)
     ret_dict = {flat_json['gameId']: []}
 
@@ -107,17 +107,20 @@ def _parse_player_json_data(json_data: dict=None) -> dict:
         player_name = flat_json[key]
         stats_key = f'ants_{i}_'
         stats = [player_name]
+        stats.append(i)
 
         for k, v in flat_json.items():
             if stats_key in k.lower():
-                stats.append(v)
+                if 'antid' not in k.lower()[-5:]:
+                    stats.append(v)
+                    cols.append(k)
 
         ret_dict[flat_json['gameId']].append(stats)
 
-    return ret_dict
+    return cols, ret_dict
 
 
-def _column_names_match_hist(json_data: dict=None) -> list:
+def _column_names_match_hist(col_data: list=None) -> list:
     """_column_names_match_hist
 
     Gets the names of the columns for the match history data
@@ -126,13 +129,12 @@ def _column_names_match_hist(json_data: dict=None) -> list:
     :rtype list
     """
 
-    flat_json = flatten_json(json_data)
     stats_key = f'ants_0_'
-    ret_list = ['gameId']
+    ret_list = ['gameId', 'participantId']
 
-    for k, _ in flat_json.items():
-        if stats_key in k.lower():
-            names = k.split('_')
+    for i in col_data:
+        if stats_key in i:
+            names = i.split('_')
 
             if 'Deltas' in names[-2]:
                 ret_list.append(f'{names[-2]}_{names[-1]}')
@@ -164,7 +166,6 @@ def _create_column_name_and_type(column_name: list=None, stats_data: dict=None) 
 
     for tup in tup_list:
         name = tup[0]
-
         if isinstance(tup[1], int):
             col_type = 'real'
         else:
@@ -173,6 +174,7 @@ def _create_column_name_and_type(column_name: list=None, stats_data: dict=None) 
         ret_list.append((name, col_type))
 
     ret_list.extend([('gameId', 'real'), ('PlayerName', 'text')])
+
     return ret_list
 
 
@@ -192,13 +194,12 @@ def _fix_for_sql_instertion(stats_data: dict=None) -> list:
             tmp_fix = i[1:]
             tmp_fix.extend([k, i[0]])
 
-            fixed_insert.append(tmp_fix)
+            fixed_insert.append(tuple(tmp_fix))
 
     return fixed_insert
 
 
-def make_sql_database(database: str=None, table_name: str=None,
-                      column_names: list=None) -> None:
+def make_sql_table(database: str=None, table_name: str=None, column_names: list=None) -> None:
     """make_sql_database
 
     Creates columns for a given table
@@ -211,6 +212,7 @@ def make_sql_database(database: str=None, table_name: str=None,
 
     conn = _make_database(database)
     _create_table(conn, table_name, column_names)
+    conn.close()
 
 
 def insert_stats(database: str=None, table_name: str=None, stats_data: dict=None) -> None:
@@ -224,9 +226,14 @@ def insert_stats(database: str=None, table_name: str=None, stats_data: dict=None
     :rtype None
     """
 
-
     correct_insert = _fix_for_sql_instertion(stats_data)
     conn = _make_database(database)
 
-    SQL = f"""INSERT INTO {table_name} values {'?,'*len(correct_insert[0])}"""
-    print(SQL)
+    SQL = f"""INSERT INTO {table_name} VALUES (null, {'?,'*len(correct_insert[0])}"""
+    SQL = f"""{SQL[:-1]})"""
+
+    c = conn.cursor()
+    c.executemany(SQL, correct_insert)
+
+    conn.commit()
+    conn.close()
