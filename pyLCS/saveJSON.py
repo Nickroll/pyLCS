@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import sqlite3
 from typing import Union
 from warnings import warn
@@ -112,8 +113,11 @@ def _parse_player_json_data(json_data: dict=None) -> dict:
         for k, v in flat_json.items():
             if stats_key in k.lower():
                 if 'antid' not in k.lower()[-5:]:
-                    stats.append(v)
-                    cols.append(k)
+                    if 'role' in k.lower() or 'lane' in k.lower():
+                        continue
+                    else:
+                        stats.append(v)
+                        cols.append(k)
 
         ret_dict[flat_json['gameId']].append(stats)
 
@@ -212,6 +216,8 @@ def make_sql_table(database: str=None, table_name: str=None, column_names: list=
 
     conn = _make_database(database)
     _create_table(conn, table_name, column_names)
+
+    conn.commit()
     conn.close()
 
 
@@ -237,3 +243,55 @@ def insert_stats(database: str=None, table_name: str=None, stats_data: dict=None
 
     conn.commit()
     conn.close()
+
+
+def get_stats(json_data: Union[str, dict]=None) -> dict:
+    """get_stats
+
+    Takes either a JSON file, as str, or JSON data loaded via the JSON module. Will return the stats as:
+        {gameId: [[Player 1 Stats], [Player 2 Stats]], gameId2" [[]]}
+
+    :param json_file (Union[str, dict]): The path to the JSON file containing the stats or the JSON dict
+    :rtype dict
+    """
+    if isinstance(json_data, str):
+        with open(json_data, 'r') as jf:
+            data = json.load(jf)
+
+    elif isinstance(json_data, dict):
+        data = json_data
+
+    else:
+        raise TypeError(f'{type(json_data)} is wrong type, must be of type str or dict')
+
+    _, stats = _parse_player_json_data(data)
+
+    return stats
+
+
+def get_columns(json_data: Union[str, dict]=None) -> dict:
+    """get_columns
+
+    Takes a JSON file or JSON data leaded via the JSON module and retuns the column names for use in the
+    SQL table. Only needs to be run when creating the table the first time, or to check on the columns
+    being created
+
+    :param json_data (Union[str, dict]): The path to the JSON file or the JSON dict
+    :rtype dict
+    """
+
+    if isinstance(json_data, str):
+        with open(json_data, 'r') as jf:
+            data = json.load(jf)
+
+    elif isinstance(json_data, dict):
+        data = json_data
+
+    else:
+        raise TypeError(f'{type(json_data)} is wrong type, must be of type str or dict')
+
+    cols, stats = _parse_player_json_data(data)
+    cols = _column_names_match_hist(cols)
+    cols = _create_column_name_and_type(cols, stats)
+
+    return cols
