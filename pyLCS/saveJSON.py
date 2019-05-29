@@ -8,7 +8,7 @@ from warnings import warn
 import pandas
 
 
-def flatten_json(y: dict=None) -> dict:
+def _flatten_json(y: dict=None) -> dict:
     """flatten_json
 
     Flattens a JSON to a single dict, take from:
@@ -100,7 +100,7 @@ def _parse_player_json_data(json_data: dict=None) -> dict:
     :rtype dict
     """
     cols = list()
-    flat_json = flatten_json(json_data)
+    flat_json = _flatten_json(json_data)
     ret_dict = {flat_json['gameId']: []}
 
     for i in range(0, 10):
