@@ -211,3 +211,22 @@ def make_sql_database(database: str=None, table_name: str=None,
 
     conn = _make_database(database)
     _create_table(conn, table_name, column_names)
+
+
+def insert_stats(database: str=None, table_name: str=None, stats_data: dict=None) -> None:
+    """insert_stats
+
+    Well insert the stats into the SQL DB connection and table provided
+
+    :param database (str): The name of the SQLite3 Database
+    :param table_name (str): The table name to insert the data into
+    :param stats_data (dict): The stats returned by _parse_player_json_data
+    :rtype None
+    """
+
+
+    correct_insert = _fix_for_sql_instertion(stats_data)
+    conn = _make_database(database)
+
+    SQL = f"""INSERT INTO {table_name} values {'?,'*len(correct_insert[0])}"""
+    print(SQL)
