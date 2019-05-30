@@ -10,11 +10,21 @@ from .parseMatchHist import _flatten_json
 def _parse_tl_player_data(json_data: dict=None) -> dict:
     """_parse_tl_player_data
 
-    Parses the JSON data and pulls out the player data and returns it as a dict
+    Parses the JSON data and pulls out the player data and returns it as a nested dict
     Example:
+        {pid: {min: {stat: stat value}}}
 
     :param json_data (dict): The loaded JSON data from either a file or as a dict
     :rtype dict
+
+    RIFT INFO:
+        min: {x: -120, y: -120}
+        max: {x: 14870, y: 14980}
+        scale:
+            min: { x: 0, y: 0}
+            max: { x: 14820, y: 14881}
+
+
     """
 
     flat_data = _flatten_json(json_data)
