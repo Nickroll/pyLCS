@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import json
+from collections import defaultdict
 from typing import Union
 
 from .parseMatchHist import _flatten_json
@@ -17,3 +18,13 @@ def _parse_tl_player_data(json_data: dict=None) -> dict:
     """
 
     flat_data = _flatten_json(json_data)
+    tl_dict = defaultdict(dict)
+
+    for idx, time in enumerate(json_data[:16]):
+        for i in time['participantFrames']:
+            tl_dict[time['participantFrames'][i]['participantId'] - 1][idx] = time['participantFrames'][i]
+
+            # Fix for participant ID as it differes in match history and timeline info
+            tl_dict[time['participantFrames'][i]['participantId'] - 1][idx]['participantId'] = tl_dict[time['participantFrames'][i]['participantId'] - 1][idx]['participantId'] - 1
+
+    return dict(tl_dict)
