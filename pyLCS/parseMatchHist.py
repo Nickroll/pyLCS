@@ -48,6 +48,7 @@ def _parse_player_json_data(json_data: dict=None) -> dict:
     :param json_data (dict): JSON data returned from the match history page
     :rtype dict
     """
+
     cols = list()
     flat_json = _flatten_json(json_data)
     ret_dict = {flat_json['gameId']: []}
@@ -78,7 +79,7 @@ def _column_names_match_hist(col_data: list=None) -> list:
 
     Gets the names of the columns for the match history data
 
-    :param json_data (dict): JSON data returned from the match history page
+    :param json_data (dict): Flat JSON data returned from the match history page
     :rtype list
     """
 
@@ -140,6 +141,7 @@ def get_stats(json_data: Union[str, dict]=None) -> dict:
     :param json_file (Union[str, dict]): The path to the JSON file containing the stats or the JSON dict
     :rtype dict
     """
+
     if isinstance(json_data, str):
         with open(json_data, 'r') as jf:
             data = json.load(jf)
@@ -158,7 +160,7 @@ def get_stats(json_data: Union[str, dict]=None) -> dict:
 def get_columns(json_data: Union[str, dict]=None) -> dict:
     """get_columns
 
-    Takes a JSON file or JSON data leaded via the JSON module and retuns the column names for use in the
+    Takes a JSON file or JSON data loaded via the JSON module and retuns the column names for use in the
     SQL table. Only needs to be run when creating the table the first time, or to check on the columns
     being created
 
