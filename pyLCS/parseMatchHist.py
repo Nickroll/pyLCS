@@ -120,7 +120,7 @@ def _create_column_name_and_type(column_name: list=None, stats_data: dict=None) 
 
     for tup in tup_list:
         name = tup[0]
-        if isinstance(tup[1], int):
+        if isinstance(tup[1], (int, float)):
             col_type = 'real'
         else:
             col_type = 'text'
