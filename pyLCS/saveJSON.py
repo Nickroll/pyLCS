@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sqlite3
+import warnings
 from typing import Union
 
 
@@ -26,7 +27,8 @@ def _create_table(conn: sqlite3.Connection=None, table_name: str=None,
                   column_list: list=None)-> None:
     """_create_table
 
-    Creates a table at the given sqlite connection passed to it
+    Creates a table at the given sqlite connection passed to it as well as adds the columns passed
+    to it.
 
     :param conn (sqlite3.Connection): A database to create a table at
     :param table_name (str): The name of the table to create at the database
@@ -42,19 +44,23 @@ def _create_table(conn: sqlite3.Connection=None, table_name: str=None,
     except sqlite3.Error as e:
         print(e)
 
-    for tup in column_list:
-        SQL = f"""ALTER TABLE {table_name} ADD COLUMN '{tup[0]}' {tup[1]}"""
-        try:
-            c = conn.cursor()
-            c.execute(SQL)
-        except sqlite3.Error as e:
-            print(e)
+    if column_list:
+        for tup in column_list:
+            SQL = f"""ALTER TABLE {table_name} ADD COLUMN '{tup[0]}' {tup[1]}"""
+            try:
+                c = conn.cursor()
+                c.execute(SQL)
+            except sqlite3.Error as e:
+                print(e)
+    else:
+        warnings.warn('A table was created but with only an id column.'
+                      ' Rerun this function with a list of columns if you want to have columns created')
 
 
 def make_sql_table(database: str=None, table_name: str=None, column_names: list=None) -> None:
     """make_sql_database
 
-    Creates columns for a given table
+    Creates the database, columns, and table.
 
     :param database (str): The database to connect to
     :param table_name (str): The table to create the column names for
@@ -72,7 +78,8 @@ def make_sql_table(database: str=None, table_name: str=None, column_names: list=
 def _fix_for_sql_instertion(stats_data: dict=None) -> list:
     """_fix_for_sql_instertion
 
-    Fixes the order of the list for insertion into the SQLite DB
+    Fixes the order of the list for insertion into the SQLite DB. Order should be
+    (stats, gameId, PlayerName)
 
     :param stats_data (dict): The stats dict that is returned by _parse_player_json_data
     :rtype list
