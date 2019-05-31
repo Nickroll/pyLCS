@@ -26,8 +26,8 @@ def _parse_tl_player_data(json_data: dict=None) -> dict:
 
 
     """
+    # TODO: FIX PID being negative and not 0-9
 
-    flat_data = _flatten_json(json_data)
     tl_dict = defaultdict(dict)
 
     for idx, time in enumerate(json_data[:16]):
@@ -35,6 +35,10 @@ def _parse_tl_player_data(json_data: dict=None) -> dict:
             tl_dict[time['participantFrames'][i]['participantId'] - 1][idx] = time['participantFrames'][i]
 
             # Fix for participant ID as it differes in match history and timeline info
-            tl_dict[time['participantFrames'][i]['participantId'] - 1][idx]['participantId'] = tl_dict[time['participantFrames'][i]['participantId'] - 1][idx]['participantId'] - 1
+            tl_dict[time['participantFrames'][i]['participantId'] - 1][idx]['participantId'] -= 1
+
+    for k, v in tl_dict.items():
+        for key, val in v.items():
+            tl_dict[k][key] = _flatten_json(val)
 
     return dict(tl_dict)

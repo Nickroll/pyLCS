@@ -25,11 +25,11 @@ def _flatten_json(y: dict=None) -> dict:
         """
         if isinstance(x, dict):
             for a in x:
-                flatten(x[a], name + a + '_')
+                flatten(x[a], str(name) + str(a) + '_')
         elif isinstance(x, list):
             i = 0
             for a in x:
-                flatten(a, name + str(i) + '_')
+                flatten(str(a), str(name) + str(i) + '_')
                 i += 1
         else:
             out[name[:-1]] = x

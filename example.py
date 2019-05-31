@@ -9,7 +9,7 @@ with open('tlTest.json', 'r') as jf:
     data = json.load(jf)
 
 print(parseTimeline._parse_tl_player_data(data)[8][10])
-
+print(parseTimeline._parse_tl_player_data(data))
 # stats = parseMatchHist.get_stats(data)
 # cols = parseMatchHist.get_columns(data)
 #
