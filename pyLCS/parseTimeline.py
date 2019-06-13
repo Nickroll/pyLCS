@@ -42,4 +42,21 @@ def _parse_tl_player_data(json_data: dict=None) -> dict:
 
     return dict(tl_dict)
 
-# TODO: Link name and PID for a given game
+
+def _fix_pid_with_name(time_line_dict: dict=None, match_history_stats: dict=None) -> dict:
+    """_fix_pid_with_name
+
+    Uses the stats returned by parseMatchHist.get_stats() to replace the pid key with the players name
+
+    :param time_line_dict (dict): The dict returned from _parse_tl_player_data
+    :param match_history_stats (dict): The dict returned from parseMatchHist.get_stats
+    :rtype dict
+    """
+
+    fixed_dict = dict()
+
+    v = list(match_history_stats.values())
+    for i, l in enumerate(v[0]):
+        fixed_dict[l[0]] = time_line_dict[i]
+
+    return fixed_dict

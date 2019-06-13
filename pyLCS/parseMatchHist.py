@@ -25,11 +25,11 @@ def _flatten_json(y: dict=None) -> dict:
         """
         if isinstance(x, dict):
             for a in x:
-                flatten(x[a], str(name) + str(a) + '_')
+                flatten(x[a], name + a + '_')
         elif isinstance(x, list):
             i = 0
             for a in x:
-                flatten(str(a), str(name) + str(i) + '_')
+                flatten(a, name + str(i) + '_')
                 i += 1
         else:
             out[name[:-1]] = x
@@ -51,6 +51,7 @@ def _parse_player_json_data(json_data: dict=None) -> dict:
 
     cols = list()
     flat_json = _flatten_json(json_data)
+
     ret_dict = {flat_json['gameId']: []}
 
     for i in range(0, 10):
@@ -136,7 +137,7 @@ def get_stats(json_data: Union[str, dict]=None) -> dict:
     """get_stats
 
     Takes either a JSON file, as str, or JSON data loaded via the JSON module. Will return the stats as:
-        {gameId: [[Player 1 Stats], [Player 2 Stats]], gameId2" [[]]}
+        {gameId: [[Player 1 Stats], [Player 2 Stats]]}
 
     :param json_file (Union[str, dict]): The path to the JSON file containing the stats or the JSON dict
     :rtype dict

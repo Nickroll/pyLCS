@@ -6,14 +6,17 @@ from pyLCS import (liquidCrawler, matchCrawler, parseMatchHist, parseTimeline,
                    saveJSON)
 
 with open('tlTest.json', 'r') as jf:
-    data = json.load(jf)
+    tldata = json.load(jf)
 
-print(parseTimeline._parse_tl_player_data(data))
+tldata = parseTimeline._parse_tl_player_data(tldata)
 
-#print(parseTimeline._parse_tl_player_data(data)[8][10])
-#print(parseTimeline._parse_tl_player_datta(data))
-# stats = parseMatchHist.get_stats(data)
+with open('test.json', 'r') as f:
+    data = json.load(f)
+
+stats = parseMatchHist.get_stats(data)
+fixed = parseTimeline._fix_pid_with_name(tldata, stats)
+
+
 # cols = parseMatchHist.get_columns(data)
-#
 # saveJSON.make_sql_table('test.db', 'testtable', cols)
 # saveJSON.insert_stats('test.db', 'testtable', stats)
