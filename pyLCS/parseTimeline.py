@@ -26,7 +26,6 @@ def _parse_tl_player_data(json_data: dict=None) -> dict:
 
 
     """
-    # TODO: FIX PID being negative and not 0-9
 
     tl_dict = defaultdict(dict)
 
@@ -42,3 +41,5 @@ def _parse_tl_player_data(json_data: dict=None) -> dict:
             tl_dict[k][key] = _flatten_json(val)
 
     return dict(tl_dict)
+
+# TODO: Link name and PID for a given game
