@@ -105,3 +105,6 @@ venv.bak/
 
 # ycm
 .ycm_extra_conf.py
+
+# .vim files
+/.vim

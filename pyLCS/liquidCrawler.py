@@ -12,8 +12,7 @@ class liquidCrawler(object):
     Basic class for creating and retriving the post match history links from liquidpedia
     """
 
-    def __init__(self, region: str=None, year: Union[str, int]=None, split: str=None,
-                 playoffs: bool=False):
+    def __init__(self, region: str=None, year: Union[str, int]=None, split: str=None, playoffs: bool=False):
         self.region = region
         self.year = str(year)
         self.split = split

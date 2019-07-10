@@ -14,9 +14,9 @@ with open('test.json', 'r') as f:
     data = json.load(f)
 
 stats = parseMatchHist.get_stats(data)
-fixed = parseTimeline._fix_pid_with_name(tldata, stats)
-
+fixed = parseTimeline._fix_pid_with_names(tldata, stats)
 
 # cols = parseMatchHist.get_columns(data)
 # saveJSON.make_sql_table('test.db', 'testtable', cols)
 # saveJSON.insert_stats('test.db', 'testtable', stats)
+
