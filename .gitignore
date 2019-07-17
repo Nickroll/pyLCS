@@ -112,3 +112,6 @@ venv.bak/
 # json and dbs
 *.json
 *.db
+
+# OSX files
+.DS_Store
