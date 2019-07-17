@@ -1,20 +1,17 @@
 #!/usr/bin/env python
 
-import json
 from collections import defaultdict
-from typing import Union
 
 from .parseMatchHist import _flatten_json
 
 
-def _parse_tl_player_data(json_data: dict=None) -> dict:
+def _parse_tl_player_data(json_data: dict=None, minute: int=15) -> dict:
     """_parse_tl_player_data
 
-    Parses the JSON data and pulls out the player data and returns it as a nested dict
-    Example:
-        {pid: {min: {stat: stat value}}}
+    Parses the JSON data and pulls out the player data and returns it as a nested dict up to the minute specified
 
     :param json_data (dict): The loaded JSON data from either a file or as a dict
+    :param minute (int): The last minute in time you want to gather stats for
     :rtype dict
 
     RIFT INFO:
@@ -29,7 +26,7 @@ def _parse_tl_player_data(json_data: dict=None) -> dict:
 
     tl_dict = defaultdict(dict)
 
-    for idx, time in enumerate(json_data[:16]):
+    for idx, time in enumerate(json_data[:minute + 1]):
         for i in time['participantFrames']:
             tl_dict[time['participantFrames'][i]['participantId'] - 1][idx] = time['participantFrames'][i]
 
@@ -62,20 +59,21 @@ def _fix_pid_with_names(time_line_dict: dict=None, match_history_stats: dict=Non
     return fixed_dict
 
 
-def _parse_event_data(json_data: dict=None, player_data: dict=None) -> dict:
+def _parse_event_data(json_data: dict=None, player_data: dict=None, minute: int=15) -> dict:
     """_parse_event_data
 
     Parses the event data from the timeline and adds it to the dict returned by _parse_tl_player_data
 
     :param json_data (dict): The json dict containing the timeline information
     :param player_data (dict): The dict returned by _parse_tl_player_data
+    :param minute (int): The maximum time you want to gather stats for in minutes
     :rtype dict
     """
 
     unwanted_types = {'SKILL_LEVEL_UP', 'ITEM_DESTROYED', 'WARD_PLACED', 'WARD_KILL', 'ITEM_SOLD',
                       'ITEM_PURCHASED', 'ITEM_UNDO'}
 
-    for idx, i in enumerate(json_data[:16]):
+    for idx, i in enumerate(json_data[:minute + 1]):
         for e in i['events']:
             if e['type'] not in unwanted_types:
                 pid = int(e['killerId']) - 1
@@ -95,3 +93,25 @@ def _parse_event_data(json_data: dict=None, player_data: dict=None) -> dict:
                 continue
 
     return player_data
+
+
+def timeline_stats(timeline_data: str=None, match_history_stats: dict=None, minute: int=15) -> dict:
+    """timeline_stats
+
+    Parses the timeline stats returned by matchCrawler.download_json_data() and returns a json like
+    object that contains data timeline data up to the minute specified
+
+    :param timeline_data (str): The second data object returned by matchCrawler.download_json_data()
+    :param match_history_stats (dict): The data returned by parseMatchHist.get_stats()
+    :param minute (int): The maximum minute for which you want timeline data returned
+    :rtype dict
+    """
+
+    if not isinstance(minute, int):
+        minute = int(minute)
+
+    parse_data = _parse_tl_player_data(timeline_data, minute)
+    event_data = _parse_event_data(timeline_data, parse_data, minute)
+    fixed = _fix_pid_with_names(event_data, match_history_stats)
+
+    return fixed
