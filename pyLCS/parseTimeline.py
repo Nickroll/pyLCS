@@ -60,3 +60,38 @@ def _fix_pid_with_names(time_line_dict: dict=None, match_history_stats: dict=Non
         fixed_dict[l[0]] = time_line_dict[i]
 
     return fixed_dict
+
+
+def _parse_event_data(json_data: dict=None, player_data: dict=None) -> dict:
+    """_parse_event_data
+
+    Parses the event data from the timeline and adds it to the dict returned by _parse_tl_player_data
+
+    :param json_data (dict): The json dict containing the timeline information
+    :param player_data (dict): The dict returned by _parse_tl_player_data
+    :rtype dict
+    """
+
+    unwanted_types = {'SKILL_LEVEL_UP', 'ITEM_DESTROYED', 'WARD_PLACED', 'WARD_KILL', 'ITEM_SOLD',
+                      'ITEM_PURCHASED', 'ITEM_UNDO'}
+
+    for idx, i in enumerate(json_data[:16]):
+        for e in i['events']:
+            if e['type'] not in unwanted_types:
+                pid = int(e['killerId']) - 1
+
+                # Fixing the issue where pid's don't match
+                to_insert = e
+                for k, v in to_insert.items():
+                    if 'Id' in k:
+                        if isinstance(v, int):
+                            to_insert[k] -= 1
+                        elif isinstance(v, list):
+                            updated_ids = [pids - 1 for pids in v]
+                            to_insert[k] = updated_ids
+
+                player_data[pid][idx] = [player_data[pid][idx], to_insert]
+            else:
+                continue
+
+    return player_data
