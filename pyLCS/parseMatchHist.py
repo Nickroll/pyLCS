@@ -1,7 +1,14 @@
 #!/usr/bin/env python
-
+"""
+Functions that parse the match history JSON. The data is returned as a dict of
+{gameId: [[player1], [player2]]}. The columns returned by get_columns are in the same order as the
+values returned by get_stats. The values are kept seperate as they were designed to be used with an
+sqlite3 db. However, the function merge_stats_and_column will create a new dict of
+{gameId: [{stat1: value, stat2: value}, {stat1: value, stat2: value}]}. In this case the position in
+the list is the playerId (0-9 number from RIOT)
+"""
 import json
-from typing import Union
+from typing import List, Union
 
 
 def _flatten_json(y: dict=None) -> dict:
@@ -158,7 +165,7 @@ def get_stats(json_data: Union[str, dict]=None) -> dict:
     return stats
 
 
-def get_columns(json_data: Union[str, dict]=None) -> dict:
+def get_columns(json_data: Union[str, dict]=None) -> List[tuple]:
     """get_columns
 
     Takes a JSON file or JSON data loaded via the JSON module and retuns the column names for use in the
@@ -166,7 +173,7 @@ def get_columns(json_data: Union[str, dict]=None) -> dict:
     being created
 
     :param json_data (Union[str, dict]): The path to the JSON file or the JSON dict
-    :rtype dict
+    :rtype List[tuple]
     """
 
     if isinstance(json_data, str):
@@ -184,3 +191,33 @@ def get_columns(json_data: Union[str, dict]=None) -> dict:
     cols = _create_column_name_and_type(cols, stats)
 
     return cols
+
+
+def merge_stats_and_column(stats: dict=None, cols: List[tuple]=None) -> dict:
+    """merge_stats_and_column
+
+    Merges the players column and stats into one dictonary:
+
+    {gameId: [{stat1: value, stat2: value}, {stat1: value, stat2: value}]}.
+
+    :param stats (dict): The stats rturned by get_stats
+    :param cols (List[tuple]): The column returned by get_column
+    :rtype dict
+    """
+    game_id = list(stats.keys())[0]
+
+    #TODO fix this
+    ret_dict = {game_id:}
+
+    for k, v in stats.items():
+        for item in v:
+            tmp_fix = item[1:-2]
+            tmp_fix.extend([item[-1], item[0]])
+
+    for idx, key in enumerate(cols):
+        if key[0] == 'gameId':
+            continue
+        else:
+            ret_dict[game_id][key[0]] = tmp_fix[idx]
+
+    return ret_dict

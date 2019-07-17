@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+"""
+Contains the functions necessary to parse the timeline specific JSON that is returned by the lolesports
+post match page. The data returned is in a JSON like form of {player: time {stat: value}}. The only
+modification of the data that takes place is that the playerIds are 1 less than the listed ids in the
+JSON in order to keep them the same with the match history data.
+"""
 from collections import defaultdict
 
 from .parseMatchHist import _flatten_json

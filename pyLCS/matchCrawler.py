@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-
+"""
+Contains the functions necessary to create the links to the JSON data from the match history links
+provided to it. The data is then downloaded in JSON form and returned as a
+{match_history: info, timeline: info}
+"""
 from time import sleep
 from typing import Union
 from warnings import warn
@@ -22,6 +26,8 @@ def _create_json_links(link: str=None) -> Union[tuple, None]:
     acs_base = 'https://acs.leagueoflegends.com/v1/stats/game'
 
     relm_part = link.find('ESPORTSTMNT')
+
+    # Finds the location of the ? and slices the string
     if relm_part != -1:
         q_loc = link.find('?')
 
@@ -57,6 +63,8 @@ def _json_retrival(link: str=None) -> Union[dict, None]:
 
     if r.ok:
         return r.json()
+
+    # One retry just incase of an internet hickup
     else:
         sleep(5)
         to_rerun = link
