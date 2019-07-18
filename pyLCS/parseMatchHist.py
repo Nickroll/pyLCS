@@ -4,9 +4,9 @@ Functions that parse the match history JSON. The data is returned as a dict of
 {gameId: [[player1], [player2]]}. The columns returned by get_columns are in the same order as the
 values returned by get_stats. The values are kept seperate as they were designed to be used with an
 sqlite3 db. However, the function merge_stats_and_column will create a new dict of
-{gameId: [{stat1: value, stat2: value}, {stat1: value, stat2: value}]}. In this case the position in
-the list is the playerId (0-9 number from RIOT)
+{Playername1: {stat1: value, stat2: value2}, Playername2: {stat1: value, stat2: value2}}
 """
+
 import json
 from typing import List, Union
 
