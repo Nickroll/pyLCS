@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+
+"""
+Retrieves all the necessary game data from the liquidpedia game site. Finds the links to the match
+history pages and returns them for use later.
+"""
+
 from typing import Union
 
 from requests_html import HTMLResponse, HTMLSession

@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+"""
+Necessary functions for inserting the JSON information returned by parseMatchHist functions to be
+saved into an sqlite3 database. Use make_sql_table to create the sqlite3 table in the database with
+the necessary columns provided by parseMatchHist. Insert stats can then be used to update the table
+with stats when necessary
+"""
+
 
 import sqlite3
 import warnings
@@ -23,8 +30,7 @@ def _make_database(path: str=None) -> Union[sqlite3.Connection, None]:
     return None
 
 
-def _create_table(conn: sqlite3.Connection=None, table_name: str=None,
-                  column_list: list=None)-> None:
+def _create_table(conn: sqlite3.Connection=None, table_name: str=None, column_list: list=None) -> None:
     """_create_table
 
     Creates a table at the given sqlite connection passed to it as well as adds the columns passed
