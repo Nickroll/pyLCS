@@ -198,26 +198,22 @@ def merge_stats_and_column(stats: dict=None, cols: List[tuple]=None) -> dict:
 
     Merges the players column and stats into one dictonary:
 
-    {gameId: [{stat1: value, stat2: value}, {stat1: value, stat2: value}]}.
+    {Playername1: {stat1: value, stat2: value2}, Playername2: {stat1: value, stat2: value2}}
 
     :param stats (dict): The stats rturned by get_stats
     :param cols (List[tuple]): The column returned by get_column
     :rtype dict
     """
-    game_id = list(stats.keys())[0]
 
-    #TODO fix this
-    ret_dict = {game_id:}
+    keys = [i[0] for i in cols]
+    ret_dict = dict()
 
     for k, v in stats.items():
-        for item in v:
-            tmp_fix = item[1:-2]
-            tmp_fix.extend([item[-1], item[0]])
+        for i in v:
+            values = i[1:]
+            values.extend([k, i[0]])
 
-    for idx, key in enumerate(cols):
-        if key[0] == 'gameId':
-            continue
-        else:
-            ret_dict[game_id][key[0]] = tmp_fix[idx]
+            ret_dict[values[-1]] = dict(zip(keys, values))
+            ret_dict[values[-1]].pop('PlayerName')
 
     return ret_dict
