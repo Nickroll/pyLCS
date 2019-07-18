@@ -48,6 +48,7 @@ def _flatten_json(y: dict=None) -> dict:
 def _parse_player_json_data(json_data: dict=None) -> dict:
     """_parse_player_json_data
 
+
     Flattens the JSON file then pulls out all the players data and retuns it as a dict
     Example:
         {gameId: {TL Impact: [stats], TL Doublelift: [stats]}}
@@ -122,6 +123,8 @@ def _create_column_name_and_type(column_name: list=None, stats_data: dict=None) 
     # This is a terrible hack that needs to be fixed at some point
     column_name.remove('PlayerName')
     column_name.remove('gameId')
+    column_name.remove('lane')
+    column_name.remove('role')
 
     stats = list(stats_data.values())[0][0][1:]
     tup_list = list(zip(column_name, stats))
