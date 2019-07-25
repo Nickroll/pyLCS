@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
+import json
+
 import context
 import pytest
 import responses
-import json
 from pyLCS.parseMatchHist import _column_names_match_hist, _flatten_json
 
 JSON_FILE = 'test.json'
@@ -38,7 +39,7 @@ def test_column_names_match_hist_only_has_specific_cols():
 def test_column_names_match_hist_lacks_subset():
     col_list = ['longestTimeSpentLiving', 'statPerk2', 'lane', 'teamId', 'gameId', 'championId']
     col_names = _column_names_match_hist(JSON_DATA)
-    assert set(col_list).issubset(col_names) == False
+    assert set(col_list).issubset(col_names) is False
 
 
 def test_column_names_match_hist_flat_with_splits():
@@ -50,6 +51,3 @@ def test_column_names_match_hist_flat_has_specific_cols():
     col_list = ['longestTimeSpentLiving', 'statPerk2', 'teamId', 'gameId', 'championId']
     col_names = _column_names_match_hist(FLAT_JSON)
     assert set(col_list).issubset(set(col_names))
-
-
-
