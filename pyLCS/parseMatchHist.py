@@ -79,7 +79,7 @@ def _parse_player_json_data(json_data: dict=None) -> dict:
                         cols.append(k)
 
         ret_dict[flat_json['gameId']].append(stats)
-    print(cols)
+
     return cols, ret_dict
 
 
