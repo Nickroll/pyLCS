@@ -64,7 +64,7 @@ def _json_retrival(link: str=None) -> Union[dict, None]:
     if r.ok:
         return r.json()
 
-    # One retry just incase of an internet hickup
+    # One retry just incase of an internet hiccup
     else:
         sleep(5)
         to_rerun = link
@@ -75,7 +75,7 @@ def _json_retrival(link: str=None) -> Union[dict, None]:
     if r.ok:
         return r.json()
     else:
-        warn(f'{link} is not a valid link to a JSON page. None was inserted into response')
+        warn(f'Unable to retrieve data for {link}. None was inserted into response')
         return None
 
 
