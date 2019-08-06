@@ -100,11 +100,11 @@ def _format_timeLine_players(json_data: dict=None, minute: int=15) -> dict:
             # Fix for pid as it differes from match history in the number here RITO PLS
             tl_return[time['participantFrames'][i]['participantId'] - 1][idx]['participantId'] -= 1
 
-    pid_to_names = _make_pid_name_dict(json_data)
-
-    for k, v in pid_to_names.items():
-        tl_return[v] = tl_return.pop(k)
-
+#    pid_to_names = _make_pid_name_dict(json_data)
+#
+#    for k, v in pid_to_names.items():
+#        tl_return[v] = tl_return.pop(k)
+#
     return tl_return
 
 
@@ -123,3 +123,43 @@ def _make_pid_name_dict(json_data: dict=None) -> dict:
         return_dict[k] = json_data['MatchHistory']['participantIdentities'][k]['player']['summonerName']
 
     return return_dict
+
+
+def _parse_event_data_players(json_data: dict=None, timeline_data: dict=None, minute: int=15, unwanted_types: Union[set, list]={}) -> dict:
+    """_parse_event_data_players
+
+    Specifically parses the event data part of the timeline JSON information
+
+    :param json_data (dict): The JSON-like dict rturned by matchCrawler.download_json_data
+    :param timeline_data (dict): The dict returned from _format_timeLine_players
+    :param minute (int): The last minute to collect data from
+    :param unwanted_type (Union[set, list]): The unwanted event stats
+    :rtype dict
+    """
+
+    frames = json_data['Timeline']['frames']
+    ids_to_name = _make_pid_name_dict(json_data)
+
+    for idx, i in enumerate(frames[:minute + 1]):
+        for e in i['events']:
+            if e['type'] not in unwanted_types:
+                to_insert = e
+
+                # Ids need to be fixed again
+                for k, v in e.items():
+                    if k in ['killerId', 'creatorId', 'participantId']:
+                        key_id = int(v) - 1
+
+                    if 'Id' in k and k != 'itemId':
+                        if isinstance(v, int):
+                            to_insert[k] = ids_to_name[v - 1]
+                        elif isinstance(v, list):
+                            updated_ids = [ids_to_name[pids - 1] for pids in v]
+                            to_insert[k] = updated_ids
+
+                timeline_data[key_id][idx] = dict(timeline_data[key_id][idx], **to_insert)
+
+            else:
+                continue
+
+    return timeline_data
