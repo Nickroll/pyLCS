@@ -45,20 +45,20 @@ def _flatten_json(y: dict=None) -> dict:
 def _format_matchHistory_players(json_data: dict=None) -> dict:
     """_format_matchHistory_players
 
-    Formats the match history to {_id: gameID, {player1: [{stat1: value1}]}}
+    Formats the match history to {{player1: [{stat1: value1}]}}
 
     :param json_data (dict): A dict in JSON-like style. Returned by matchCrawler.download_json_data
     :rtype dict
     """
 
-    return_dict = {'_id': f"{json_data['MatchHistory']['gameId']}mh"}
     flat_mh = _flatten_json(json_data['MatchHistory'])
+    return_dict = dict()
 
     for i in range(0, 10):
         key = f'participantIdentities_{i}_player_summonerName'
         player_name = flat_mh[key]
         stats_key = f'ants_{i}_'
-        return_dict[player_name] = []
+        return_dict[player_name] = {}
 
         for k, v in flat_mh.items():
             if stats_key in k.lower():
@@ -71,9 +71,9 @@ def _format_matchHistory_players(json_data: dict=None) -> dict:
                     # Deltas need to have more than just the last part of the key to make sense
                     s_key = k.split('_')
                     if 'Deltas' in s_key[-2]:
-                        return_dict[player_name].append({f'{s_key[-2]}_{s_key[-1]}': v})
+                        return_dict[player_name].update({f'{s_key[-2]}_{s_key[-1]}': v})
                     else:
-                        return_dict[player_name].append({s_key[-1]: v})
+                        return_dict[player_name].update({s_key[-1]: v})
 
     return return_dict
 
@@ -81,17 +81,17 @@ def _format_matchHistory_players(json_data: dict=None) -> dict:
 def _format_timeLine_players(json_data: dict=None, minute: int=15) -> dict:
     """_format_timeLine_players
 
-    Formats the timeline information to {_id: gameID, {player1: {time0: [{stat1: value1}]}}
+    Formats the timeline information to {player1: {time0: [{stat1: value1}]}}
 
     :param json_data (dict): A json-like dict returned by matchCrawler.download_json_data
     :param minute (int): The last minute in time to gather data for
     :rtype dict
     """
+    # TODO: Handle timelimits > game time
 
     tl_data = json_data['Timeline']['frames']
     tl_return = defaultdict(dict)  # Easy dict nesting with for loop
 
-    tl_return['_id'] = f"{json_data['MatchHistory']['gameId']}tl"
     pid_to_names = _make_pid_name_dict(json_data)
 
     for idx, time in enumerate(tl_data[:minute + 1]):
@@ -165,3 +165,80 @@ def _parse_event_data_players(json_data: dict=None, timeline_data: dict=None, mi
     return timeline_data
 
 
+def _game_information(json_data: dict=None) -> dict:
+    """_game_information
+
+    Retrieves basic game information like gameId, gameDuration, gameVersion and platformId
+
+    :param json_data (dict): The full JSON dict returned my matchCrawler.download_json_data
+    :rtype dict
+    """
+
+    data = json_data['MatchHistory']
+    ret_dict = dict()
+    for k, v in data.items():
+        # The data here is just in k:v pair not nested in any way
+        if isinstance(v, (dict, list)):
+            continue
+        else:
+            ret_dict[k] = v
+
+    return ret_dict
+
+
+def _format_team_information(json_data: dict=None) -> dict:
+    """_format_team_information
+
+    Gets the basic team information form the JSON object
+
+    :param json_data (dict): A JSON-like dict returned by matchCrawler.download_json_data
+    :rtype dict
+    """
+    ret_data = dict()
+    data = json_data['MatchHistory']['teams']
+
+    team_0 = json_data['MatchHistory']['participantIdentities'][0]['player']['summonerName'].split(' ')[0]
+    team_1 = json_data['MatchHistory']['participantIdentities'][9]['player']['summonerName'].split(' ')[0]
+
+    ret_data[team_0] = data[0]
+    ret_data[team_1] = data[1]
+
+    return ret_data
+
+
+def _merge_formats_together(match_history: dict, timeline: dict, team: dict, game_info: dict) -> dict:
+    """_merge_formats_together
+
+    Merges the previous JSON-like dicts together to create one master dict
+
+    :param match_history (dict): The dict returned by _format_matchHistory_players
+    :param timeline (dict): The dict returned by _format_timeLine_players
+    :param team (dict): The dict returned by _format_team_information
+    :param game_info (dict): The dict returned by _game_information
+    :rtype dict
+    """
+
+    game_info['Players'] = match_history
+    game_info['Team'] = team
+
+    for p in game_info['Players']:
+        game_info['Players'][p]['Minute'] = {}
+
+    for k, v in timeline.items():
+        game_info['Players'][k]['Minute'].update(v)
+
+    return game_info
+
+
+def parse_match_history(json_data: dict=None, minute: int=15, unwanted_types: Union[set, list]=None) -> dict:
+    """parse_match_history
+
+    Parse the match history datat that is returned by matchCrawler.download_json_data. The data is
+    returned as a dict in a easier to read format and for insertion into a mongoDB. The format is
+    JSON-like and can also be stored as a JSON object
+
+    :param json_data (dict): The json-like dict from matchCrawler.download_json_data
+    :param minute (int): The number of minutes you want timeline data for
+    :param unwanted_types (Union[set, list]):
+    :rtype dict
+    """
