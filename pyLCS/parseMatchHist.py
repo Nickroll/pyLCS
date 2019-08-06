@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 """
-Functions that parse the match history JSON. The data is returned as a dict of
-{gameId: [[player1], [player2]]}. The columns returned by get_columns are in the same order as the
-values returned by get_stats. The values are kept seperate as they were designed to be used with an
-sqlite3 db. However, the function merge_stats_and_column will create a new dict of
-{Playername1: {stat1: value, stat2: value2}, Playername2: {stat1: value, stat2: value2}}
+
 """
 
 import json
+from collections import defaultdict
 from typing import List, Union
 
 
@@ -45,176 +42,84 @@ def _flatten_json(y: dict=None) -> dict:
     return out
 
 
-def _parse_player_json_data(json_data: dict=None) -> dict:
-    """_parse_player_json_data
+def _format_matchHistory_players(json_data: dict=None) -> dict:
+    """_format_matchHistory_players
 
+    Formats the match history to {_id: gameID, {player1: [{stat1: value1}]}}
 
-    Flattens the JSON file then pulls out all the players data and retuns it as a dict
-    Example:
-        {gameId: {TL Impact: [stats], TL Doublelift: [stats]}}
-
-    :param json_data (dict): JSON data returned from the match history page
+    :param json_data (dict): A dict in JSON-like style. Returned by matchCrawler.download_json_data
     :rtype dict
     """
 
-    cols = list()
-    flat_json = _flatten_json(json_data)
-
-    ret_dict = {flat_json['gameId']: []}
+    return_dict = {'_id': f"{json_data['MatchHistory']['gameId']}mh"}
+    flat_mh = _flatten_json(json_data['MatchHistory'])
 
     for i in range(0, 10):
         key = f'participantIdentities_{i}_player_summonerName'
-        player_name = flat_json[key]
+        player_name = flat_mh[key]
         stats_key = f'ants_{i}_'
-        stats = [player_name]
-        stats.append(i)
+        return_dict[player_name] = []
 
-        for k, v in flat_json.items():
+        for k, v in flat_mh.items():
             if stats_key in k.lower():
                 if 'antid' not in k.lower()[-5:]:
+
+                    # Role and lane are not listed correctly so they are useless
                     if 'role' in k.lower() or 'lane' in k.lower():
                         continue
+
+                    # Deltas need to have more than just the last part of the key to make sense
+                    s_key = k.split('_')
+                    if 'Deltas' in s_key[-2]:
+                        return_dict[player_name].append({f'{s_key[-2]}_{s_key[-1]}': v})
                     else:
-                        stats.append(v)
-                        cols.append(k)
+                        return_dict[player_name].append({s_key[-1]: v})
 
-        ret_dict[flat_json['gameId']].append(stats)
-
-    return cols, ret_dict
+    return return_dict
 
 
-def _column_names_match_hist(col_data: list=None) -> list:
-    """_column_names_match_hist
+def _format_timeLine_players(json_data: dict=None, minute: int=15) -> dict:
+    """_format_timeLine_players
 
-    Gets the names of the columns for the match history data
+    Formats the timeline information to {_id: gameID, {player1: {time0: [{stat1: value1}]}}
 
-    :param json_data (dict): Flat JSON data returned from the match history page
-    :rtype list
-    """
-
-    stats_key = f'ants_0_'
-    ret_list = ['gameId', 'participantId']
-
-    for i in col_data:
-        if stats_key in i:
-            names = i.split('_')
-
-            if 'Deltas' in names[-2]:
-                ret_list.append(f'{names[-2]}_{names[-1]}')
-            else:
-                ret_list.append(names[-1])
-
-    ret_list.append('PlayerName')
-    return ret_list
-
-
-def _create_column_name_and_type(column_name: list=None, stats_data: dict=None) -> list:
-    """_create_column_name_and_type
-
-    Creates a list of [(column_name, column_type)] for all the columns to be used with SQL
-
-    :param column_name (list): The list of columns to be used in the SQL DB returned by _column_names_match_hist
-    :param stats_data (dict): The dict returned by _parse_player_json_data
-    :rtype list
-    """
-
-    ret_list = list()
-
-    # This is a terrible hack that needs to be fixed at some point
-    column_name.remove('PlayerName')
-    column_name.remove('gameId')
-
-    stats = list(stats_data.values())[0][0][1:]
-    tup_list = list(zip(column_name, stats))
-
-    for tup in tup_list:
-        name = tup[0]
-        if isinstance(tup[1], (int, float)):
-            col_type = 'real'
-        else:
-            col_type = 'text'
-
-        ret_list.append((name, col_type))
-
-    ret_list.extend([('gameId', 'real'), ('PlayerName', 'text')])
-
-    return ret_list
-
-
-def get_stats(json_data: Union[str, dict]=None) -> dict:
-    """get_stats
-
-    Takes either a JSON file, as str, or JSON data loaded via the JSON module. Will return the stats as:
-        {gameId: [[Player 1 Stats], [Player 2 Stats]]}
-
-    :param json_file (Union[str, dict]): The path to the JSON file containing the stats or the JSON dict
+    :param json_data (dict): A json-like dict returned by matchCrawler.download_json_data
+    :param minute (int): The last minute in time to gather data for
     :rtype dict
     """
 
-    if isinstance(json_data, str):
-        with open(json_data, 'r') as jf:
-            data = json.load(jf)
+    tl_data = json_data['Timeline']['frames']
+    tl_return = defaultdict(dict)  # Easy dict nesting with for loop
 
-    elif isinstance(json_data, dict):
-        data = json_data
+    tl_return['_id'] = f"{json_data['MatchHistory']['gameId']}tl"
 
-    else:
-        raise TypeError(f'{type(json_data)} is wrong type, must be of type str or dict')
+    for idx, time in enumerate(tl_data[:minute + 1]):
+        for i in time['participantFrames']:
+            tl_return[time['participantFrames'][i]['participantId'] - 1][idx] = time['participantFrames'][i]
 
-    _, stats = _parse_player_json_data(data)
+            # Fix for pid as it differes from match history in the number here RITO PLS
+            tl_return[time['participantFrames'][i]['participantId'] - 1][idx]['participantId'] -= 1
 
-    return stats
+    pid_to_names = _make_pid_name_dict(json_data)
 
+    for k, v in pid_to_names.items():
+        tl_return[v] = tl_return.pop(k)
 
-def get_columns(json_data: Union[str, dict]=None) -> List[tuple]:
-    """get_columns
-
-    Takes a JSON file or JSON data loaded via the JSON module and retuns the column names for use in the
-    SQL table. Only needs to be run when creating the table the first time, or to check on the columns
-    being created
-
-    :param json_data (Union[str, dict]): The path to the JSON file or the JSON dict
-    :rtype List[tuple]
-    """
-
-    if isinstance(json_data, str):
-        with open(json_data, 'r') as jf:
-            data = json.load(jf)
-
-    elif isinstance(json_data, dict):
-        data = json_data
-
-    else:
-        raise TypeError(f'{type(json_data)} is wrong type, must be of type str or dict')
-
-    cols, stats = _parse_player_json_data(data)
-    cols = _column_names_match_hist(cols)
-    cols = _create_column_name_and_type(cols, stats)
-
-    return cols
+    return tl_return
 
 
-def merge_stats_and_column(stats: dict=None, cols: List[tuple]=None) -> dict:
-    """merge_stats_and_column
+def _make_pid_name_dict(json_data: dict=None) -> dict:
+    """_make_pid_name_dict
 
-    Merges the players column and stats into one dictonary:
+    Creates a dictonary of {pid: playername} for easy conversion later
 
-    {Playername1: {stat1: value, stat2: value2}, Playername2: {stat1: value, stat2: value2}}
-
-    :param stats (dict): The stats rturned by get_stats
-    :param cols (List[tuple]): The column returned by get_column
+    :param json_data (dict): The JSON like dict returned from matchCrawler.download_json_data
     :rtype dict
     """
 
-    keys = [i[0] for i in cols]
-    ret_dict = dict()
+    return_dict = dict.fromkeys(range(0, 10))
 
-    for k, v in stats.items():
-        for i in v:
-            values = i[1:]
-            values.extend([k, i[0]])
+    for k, _ in return_dict.items():
+        return_dict[k] = json_data['MatchHistory']['participantIdentities'][k]['player']['summonerName']
 
-            ret_dict[values[-1]] = dict(zip(keys, values))
-            ret_dict[values[-1]].pop('PlayerName')
-
-    return ret_dict
+    return return_dict
