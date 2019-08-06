@@ -22,5 +22,6 @@ unwanted = {'SKILL_LEVEL_UP', 'ITEM_DESTROYED', 'ITEM_SOLD', 'WARD_PLACED', 'WAR
 
 tl_data = parseMatchHist._parse_event_data_players(full_json, timeline_data, 15, unwanted)
 
+
 with open('tl_data.json', 'w') as jf:
     json.dump(tl_data, jf, indent=4)

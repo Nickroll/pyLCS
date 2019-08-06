@@ -92,19 +92,18 @@ def _format_timeLine_players(json_data: dict=None, minute: int=15) -> dict:
     tl_return = defaultdict(dict)  # Easy dict nesting with for loop
 
     tl_return['_id'] = f"{json_data['MatchHistory']['gameId']}tl"
+    pid_to_names = _make_pid_name_dict(json_data)
 
     for idx, time in enumerate(tl_data[:minute + 1]):
         for i in time['participantFrames']:
             tl_return[time['participantFrames'][i]['participantId'] - 1][idx] = time['participantFrames'][i]
 
             # Fix for pid as it differes from match history in the number here RITO PLS
-            tl_return[time['participantFrames'][i]['participantId'] - 1][idx]['participantId'] -= 1
+            tl_return[time['participantFrames'][i]['participantId'] - 1][idx]['participantId'] = pid_to_names[tl_return[time['participantFrames'][i]['participantId'] - 1][idx]['participantId'] - 1]
 
-#    pid_to_names = _make_pid_name_dict(json_data)
-#
-#    for k, v in pid_to_names.items():
-#        tl_return[v] = tl_return.pop(k)
-#
+    for k, v in pid_to_names.items():
+        tl_return[v] = tl_return.pop(k)
+
     return tl_return
 
 
@@ -143,19 +142,20 @@ def _parse_event_data_players(json_data: dict=None, timeline_data: dict=None, mi
     for idx, i in enumerate(frames[:minute + 1]):
         for e in i['events']:
             if e['type'] not in unwanted_types:
-                to_insert = e
+                to_insert = {'event': e}
 
                 # Ids need to be fixed again
                 for k, v in e.items():
                     if k in ['killerId', 'creatorId', 'participantId']:
                         key_id = int(v) - 1
+                        key_id = ids_to_name[key_id]
 
                     if 'Id' in k and k != 'itemId':
                         if isinstance(v, int):
-                            to_insert[k] = ids_to_name[v - 1]
+                            to_insert['event'][k] = ids_to_name[v - 1]
                         elif isinstance(v, list):
                             updated_ids = [ids_to_name[pids - 1] for pids in v]
-                            to_insert[k] = updated_ids
+                            to_insert['event'][k] = updated_ids
 
                 timeline_data[key_id][idx] = dict(timeline_data[key_id][idx], **to_insert)
 
@@ -163,3 +163,5 @@ def _parse_event_data_players(json_data: dict=None, timeline_data: dict=None, mi
                 continue
 
     return timeline_data
+
+
