@@ -115,3 +115,6 @@ venv.bak/
 
 # OSX files
 .DS_Store
+
+# Personal files
+personal*
