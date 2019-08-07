@@ -3,7 +3,6 @@
 
 """
 from collections import defaultdict
-from pprint import pprint
 from typing import Union
 from warnings import warn
 
