@@ -18,7 +18,7 @@ with open('full_json.json', 'r') as jf:
 unwanted = {'SKILL_LEVEL_UP', 'ITEM_DESTROYED', 'ITEM_SOLD', 'WARD_PLACED', 'WARD_KILL',
             'ITEM_UNDO', 'ITEM_PURCHASED'}
 
-merge = parseMatchHist.parse_match_history(full_json, '100', unwanted)
+merge = parseMatchHist.parse_match_history(full_json, 100, unwanted)
 
 with open('merge.json', 'w') as jf:
     json.dump(merge, jf, indent=4)

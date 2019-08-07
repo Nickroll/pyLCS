@@ -240,7 +240,7 @@ def _format_team_information(json_data: dict) -> dict:
     return ret_data
 
 
-def _merge_formats_together(match_history: dict, event_data: dict, team: dict, game_info: dict) -> dict:
+def _merge_formats_together(match_history: dict, event_data: dict, team: dict) -> dict:
     """_merge_formats_together
 
     Merges the previous JSON-like dicts together to create one master dict
@@ -248,10 +248,10 @@ def _merge_formats_together(match_history: dict, event_data: dict, team: dict, g
     :param match_history (dict): The dict returned by _format_matchHistory_players
     :param event_data (dict): The dict returned by _parse_event_data_players
     :param team (dict): The dict returned by _format_team_information
-    :param game_info (dict): The dict returned by _game_information
     :rtype dict
     """
 
+    game_info = dict()
     game_info['Players'] = match_history
     game_info['Team'] = team
 
@@ -268,8 +268,9 @@ def parse_match_history(json_data: dict=None, minute: Union[int, str]='max', unw
     """parse_match_history
 
     Parse the match history datat that is returned by matchCrawler.download_json_data. The data is
-    returned as a dict in a easier to read format and for insertion into a mongoDB. The format is
-    JSON-like and can also be stored as a JSON object
+    returned as a list of dicts in a easier to read format and for insertion into a mongoDB. The
+    dict contiains headings Player, Team, Game. The player info is 1 json-like object per player,
+    team is the same per team, and game is just the game info.
 
     :param json_data (dict): The json-like dict from matchCrawler.download_json_data
     :param minute (Union[int, str]): The number of minutes you want timeline data for or max for all
@@ -301,6 +302,14 @@ def parse_match_history(json_data: dict=None, minute: Union[int, str]='max', unw
     team_data = _format_team_information(json_data)
     game_info = _game_information(json_data)
 
-    merge = _merge_formats_together(mh_data, event_data, team_data, game_info)
+    merge = _merge_formats_together(mh_data, event_data, team_data)
 
-    return merge
+    parse_dict = {'Player': {}, 'Team': {}, 'GameInfo': game_info}
+
+    for k, v in merge['Players'].items():
+        parse_dict['Player'][k] = v
+
+    for k, v in merge['Team'].items():
+        parse_dict['Team'][k] = v
+
+    return parse_dict
