@@ -66,6 +66,8 @@ def _json_retrival(link: str=None) -> Union[dict, None]:
 
     # One retry just incase of an internet hiccup
     else:
+        warn('Unable to get a response, sleeping for 5 seconds and then re-trying link'
+             f'{link} after 5 seconds.')
         sleep(5)
         to_rerun = link
 
