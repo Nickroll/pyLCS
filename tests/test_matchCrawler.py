@@ -14,8 +14,6 @@ MATCH_LINK_TEST_NO_Q = 'https://matchhistory.euw.leagueoflegends.com/en/#match-d
 MH_JSON_LINK = 'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976'
 TL_JSON_LINK = 'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT02/992625/timeline?gameHash=76f99e0eb8658976'
 
-BAD_MATCH_HIST_LINK = 'https://matchhistory.euw.leagueoflegends.com/ESPORTSTMNT02/590809127?gameHash=525jk1526'
-
 
 def test_create_json_links_pass():
     mh, tl = _create_json_links(MATCH_LINK_TEST)
