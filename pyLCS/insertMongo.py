@@ -18,7 +18,7 @@ def insert_into_mongoDB(merged_data: dict=None, collection_set: str=None, databa
     if collection_set.lower() in ['player', 'players']:
 
         for k, v in merged_data['Player'].items():
-            insert_dict = {'PlayerName': k, 'GameId': merged_data['GameInfo']['gameId']}
+            insert_dict = {'playerName': k, 'gameId': merged_data['GameInfo']['gameId']}
             for ikey, ivalue in v.items():
                 insert_dict[ikey] = ivalue
 
@@ -26,7 +26,7 @@ def insert_into_mongoDB(merged_data: dict=None, collection_set: str=None, databa
 
     elif collection_set.lower() in ['team', 'teams']:
         for k, v in merged_data['Team'].items():
-            insert_dict = {'TeamName': k, 'GameId': merged_data['GameInfo']['gameId']}
+            insert_dict = {'teamName': k, 'gameId': merged_data['GameInfo']['gameId']}
             for ikey, ivalue in v.items():
                 insert_dict[ikey] = ivalue
 
