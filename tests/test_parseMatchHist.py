@@ -7,7 +7,7 @@ import pytest
 from pyLCS import parseMatchHist
 from pyLCS.exceptions import pyLCSExceptions
 
-with open('tests/test.json', 'r') as jf:
+with open('tests/testParseMatchHist_input.json', 'r') as jf:
     FULL_JSON_TEST = json.load(jf)
 
 
