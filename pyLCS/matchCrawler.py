@@ -81,18 +81,26 @@ def _json_retrival(link: str=None) -> Union[dict, None]:
         return None
 
 
-def download_json_data(match_link: str=None) -> dict:
+def download_json_data(match_links: Union[list, str]=None) -> list:
     """download_json_data
 
     Downloads the JSON data from the match links provided
 
-    :param match_link (str): The link to the match history page
-    :rtype dict
+    :param match_link (Union[list, str]): The links to the match history page
+    :rtype list
     """
 
-    return_dict = dict()
-    match_history, timelines = _create_json_links(match_link)
-    return_dict['MatchHistory'] = _json_retrival(match_history)
-    return_dict['Timeline'] = _json_retrival(timelines)
+    return_list = list()
 
-    return return_dict
+    if not isinstance(match_links, list):
+        match_links = [match_links]
+
+    for l in match_links:
+
+        tmp_dict = dict()
+        match_history, timelines = _create_json_links(l)
+        tmp_dict['MatchHistory'] = _json_retrival(match_history)
+        tmp_dict['Timeline'] = _json_retrival(timelines)
+        return_list.append(tmp_dict)
+
+    return return_list

@@ -3,7 +3,7 @@
 
 """
 from collections import defaultdict
-from typing import Union
+from typing import List, Union
 from warnings import warn
 
 
@@ -264,7 +264,7 @@ def _merge_formats_together(match_history: dict, event_data: dict, team: dict) -
     return game_info
 
 
-def parse_match_history(json_data: dict=None, minute: Union[int, str]='max', unwanted_types: Union[set, list]=None) -> dict:
+def parse_match_history(json_data: List[dict]=None, minute: Union[int, str]='max', unwanted_types: Union[set, list]=None) -> dict:
     """parse_match_history
 
     Parse the match history datat that is returned by matchCrawler.download_json_data. The data is
@@ -272,44 +272,51 @@ def parse_match_history(json_data: dict=None, minute: Union[int, str]='max', unw
     dict contiains headings Player, Team, Game. The player info is 1 json-like object per player,
     team is the same per team, and game is just the game info.
 
-    :param json_data (dict): The json-like dict from matchCrawler.download_json_data
+    :param json_data (List[dict]): The json-like dict from matchCrawler.download_json_data
     :param minute (Union[int, str]): The number of minutes you want timeline data for or max for all
-    :param unwanted_types (Union[set, list]):
+    :param unwanted_types (Union[set, list]): Unwanted event types, can be None
     :rtype dict
     """
 
-    # Handling max game length, game length is minute = gamelength/60 seconds = gamelength%60
+    if not isinstance(json_data, list):
+        raise(TypeError(f'JSON_data must be of type list not {type(json_data)}'))
 
-    max_length = int(json_data['MatchHistory']['gameDuration'] / 60)
+    ret_list = list()
 
-    if isinstance(minute, str):
-        if minute.lower() == 'max':
+    for i in json_data:
+        # Finding the max game length
+        max_length = int(i['MatchHistory']['gameDuration'] / 60)
+
+        if isinstance(minute, str):
+            if minute.lower() == 'max':
+                minute = max_length
+            else:
+                minute = int(minute)
+
+        # Handle longer than max length
+        elif minute > max_length:
             minute = max_length
-        else:
-            minute = int(minute)
+            warn(f'Minute provided was greater than the game length. Minute was set to the max game length')
 
-    # Handle longer than max length
-    elif minute > max_length:
-        minute = max_length
-        warn(f'Minute provided was greater than the game length. Minute was set to the max game length')
+        elif minute < max_length:
+            minute += 1
 
-    elif minute < max_length:
-        minute += 1
+        mh_data = _format_matchHistory_players(i)
+        timeline_data = _format_timeLine_players(i, minute)
+        event_data = _parse_event_data_players(i, timeline_data, minute, unwanted_types)
+        team_data = _format_team_information(i)
+        game_info = _game_information(i)
 
-    mh_data = _format_matchHistory_players(json_data)
-    timeline_data = _format_timeLine_players(json_data, minute)
-    event_data = _parse_event_data_players(json_data, timeline_data, minute, unwanted_types)
-    team_data = _format_team_information(json_data)
-    game_info = _game_information(json_data)
+        merge = _merge_formats_together(mh_data, event_data, team_data)
 
-    merge = _merge_formats_together(mh_data, event_data, team_data)
+        parse_dict = {'Player': {}, 'Team': {}, 'GameInfo': game_info}
 
-    parse_dict = {'Player': {}, 'Team': {}, 'GameInfo': game_info}
+        for k, v in merge['Players'].items():
+            parse_dict['Player'][k] = v
 
-    for k, v in merge['Players'].items():
-        parse_dict['Player'][k] = v
+        for k, v in merge['Team'].items():
+            parse_dict['Team'][k] = v
 
-    for k, v in merge['Team'].items():
-        parse_dict['Team'][k] = v
+        ret_list.append(parse_dict)
 
-    return parse_dict
+    return ret_list

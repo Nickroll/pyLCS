@@ -63,8 +63,8 @@ def test_download_json_data_valid():
 
     resp = download_json_data(MATCH_LINK_TEST)
 
-    assert isinstance(resp, dict)
-    assert resp['MatchHistory']['pstats'] == 10
-    assert resp['MatchHistory']['tstats'] == 100
-    assert resp['Timeline']['tlstats1'] == 10
-    assert resp['Timeline']['tlstats2'] == 100
+    assert isinstance(resp, list)
+    assert resp[0]['MatchHistory']['pstats'] == 10
+    assert resp[0]['MatchHistory']['tstats'] == 100
+    assert resp[0]['Timeline']['tlstats1'] == 10
+    assert resp[0]['Timeline']['tlstats2'] == 100
