@@ -25,3 +25,16 @@ def test_format_matchHistory_players_returns_valid():
     ret_dict = parseMatchHist._format_matchHistory_players(FULL_JSON_TEST)
 
     assert ret_dict != {}
+
+
+def test_format_matchHistory_players_returns_dict():
+    ret_dict = parseMatchHist._format_matchHistory_players(FULL_JSON_TEST)
+
+    assert isinstance(ret_dict, dict)
+
+
+def test_format_matchHistory_players_adds_correct_role():
+    ret_dict = parseMatchHist._format_matchHistory_players(FULL_JSON_TEST)
+
+    assert ret_dict['TL Impact']['role'] == 'Top'
+    assert ret_dict['C9 Licorice']['role'] == 'Top'
