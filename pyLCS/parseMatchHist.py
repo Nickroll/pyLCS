@@ -6,6 +6,8 @@ from collections import defaultdict
 from typing import List, Union
 from warnings import warn
 
+from .exceptions import pyLCSExceptions
+
 
 def _flatten_json(y: dict=None) -> dict:
     """flatten_json
@@ -52,6 +54,11 @@ def _format_matchHistory_players(json_data: dict) -> dict:
 
     flat_mh = _flatten_json(json_data['MatchHistory'])
     return_dict = dict()
+
+    # There should always be 10 players in a game, extra check
+    if len(json_data['MatchHistory']['participantIdentities']) != 10:
+        raise pyLCSExceptions.InvalidPlayerAmount('The number of players in the game is not 10'
+                                                  f"it is {len(json_data['MatchHistory']['participantIdentities'])}")
 
     for i in range(0, 10):
         key = f'participantIdentities_{i}_player_summonerName'
@@ -318,5 +325,4 @@ def parse_match_history(json_data: List[dict]=None, minute: Union[int, str]='max
             parse_dict['Team'][k] = v
 
         ret_list.append(parse_dict)
-
     return ret_list
