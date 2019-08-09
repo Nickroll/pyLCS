@@ -83,6 +83,7 @@ MULTIPLE_LINKS_RESP = ['https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMN
                        'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT/ffff/timeline?gameHash=ffff']
 
 
+@pytest.mark.filterwarnings('ignore::UserWarning')
 def test_multiple_ml_links_creation():
     final_links = list()
     for l in TEST_MULTIPLE_ML_LINKS:
@@ -90,3 +91,18 @@ def test_multiple_ml_links_creation():
         final_links.extend([mh, tl])
 
     assert final_links == MULTIPLE_LINKS_RESP
+
+
+@pytest.mark.filterwarnings('ignore::UserWarning')
+@responses.activate
+def test_multiple_links_download_json_data():
+    for l in MULTIPLE_LINKS_RESP:
+        responses.add(responses.GET, l, status=200, json={'tstat': 10})
+
+    resp = download_json_data(TEST_MULTIPLE_ML_LINKS)
+
+    assert resp == [{'MatchHistory': {'tstat': 10}, 'Timeline': {'tstat': 10}},
+                    {'MatchHistory': {'tstat': 10}, 'Timeline': {'tstat': 10}},
+                    {'MatchHistory': None, 'Timeline': None},
+                    {'MatchHistory': None, 'Timeline': None},
+                    {'MatchHistory': {'tstat': 10}, 'Timeline': {'tstat': 10}}]

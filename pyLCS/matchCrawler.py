@@ -59,7 +59,12 @@ def _json_retrival(link: str=None) -> Union[dict, None]:
 
     session = HTMLSession()
 
-    r = session.get(link)
+    # If link is None from  _create_json_links
+    if link is not None:
+        r = session.get(link)
+    else:
+        warn(f'Unable to retrieve data for {link}. None was inserted into response')
+        return None
 
     if r.ok:
         return r.json()
@@ -77,6 +82,7 @@ def _json_retrival(link: str=None) -> Union[dict, None]:
     if r.ok:
         return r.json()
     else:
+        # Cannot establish a connection to the site
         warn(f'Unable to retrieve data for {link}. None was inserted into response')
         return None
 
