@@ -64,7 +64,29 @@ def test_download_json_data_valid():
     resp = download_json_data(MATCH_LINK_TEST)
 
     assert isinstance(resp, list)
-    assert resp[0]['MatchHistory']['pstats'] == 10
-    assert resp[0]['MatchHistory']['tstats'] == 100
-    assert resp[0]['Timeline']['tlstats1'] == 10
-    assert resp[0]['Timeline']['tlstats2'] == 100
+    assert resp[0] == {'MatchHistory': {'pstats': 10, 'tstats': 100},
+                       'Timeline': {'tlstats1': 10, 'tlstats2': 100}}
+
+
+TEST_MULTIPLE_ML_LINKS = ['ESPORTSTMNT/9999?gameHash=9999',
+                          'ESPORTSTMNT/8888?gameHash=8888',
+                          'ESPORFAIL/7777?gameHash=7777',
+                          'ESPORTSTMNT/fffffgameHash=ffff',
+                          'ESPORTSTMNT/ffff?gameHash=ffff']
+
+MULTIPLE_LINKS_RESP = ['https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT/9999?gameHash=9999',
+                       'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT/9999/timeline?gameHash=9999',
+                       'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT/8888?gameHash=8888',
+                       'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT/8888/timeline?gameHash=8888',
+                       None, None, None, None,
+                       'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT/ffff?gameHash=ffff',
+                       'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT/ffff/timeline?gameHash=ffff']
+
+
+def test_multiple_ml_links_creation():
+    final_links = list()
+    for l in TEST_MULTIPLE_ML_LINKS:
+        mh, tl = _create_json_links(l)
+        final_links.extend([mh, tl])
+
+    assert final_links == MULTIPLE_LINKS_RESP

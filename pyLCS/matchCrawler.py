@@ -35,8 +35,8 @@ def _create_json_links(link: str=None) -> Union[tuple, None]:
             post_link = link[relm_part:q_loc]
             hash_part = link[q_loc + 1:]
 
-            timelines = f'{acs_base}/{post_link}/timeline?{hash_part}'
             match_history = f'{acs_base}/{post_link}?{hash_part}'
+            timelines = f'{acs_base}/{post_link}/timeline?{hash_part}'
 
             return (match_history, timelines)
 
