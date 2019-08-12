@@ -295,10 +295,12 @@ def parse_match_history(json_data: List[dict]=None, minute: Union[int, str]='max
         max_length = int(i['MatchHistory']['gameDuration'] / 60)
 
         if isinstance(minute, str):
-            if minute.lower() == 'max':
+            if minute.isnumeric():
+                minute = int(minute)
+            elif minute.lower() == 'max':
                 minute = max_length
             else:
-                minute = int(minute)
+                raise TypeError('Minute must be of type int or the string max ')
 
         # Handle longer than max length
         elif minute > max_length:
