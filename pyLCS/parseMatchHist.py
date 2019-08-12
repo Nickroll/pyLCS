@@ -303,7 +303,7 @@ def parse_match_history(json_data: List[dict]=None, minute: Union[int, str]='max
                 raise TypeError('Minute must be of type int or the string max ')
 
         # Handle longer than max length
-        elif minute > max_length:
+        if minute > max_length:
             minute = max_length
             warn(f'Minute provided was greater than the game length. Minute was set to the max game length')
 
