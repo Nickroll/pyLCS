@@ -40,6 +40,7 @@ def _flatten_json(y: dict=None) -> dict:
             out[name[:-1]] = x
 
     flatten(y)
+
     return out
 
 
@@ -327,4 +328,5 @@ def parse_match_history(json_data: List[dict]=None, minute: Union[int, str]='max
             parse_dict['Team'][k] = v
 
         ret_list.append(parse_dict)
+
     return ret_list
