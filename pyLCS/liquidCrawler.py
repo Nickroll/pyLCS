@@ -20,13 +20,18 @@ class liquidCrawler(object):
 
     def __init__(self, region: str=None, year: Union[str, int]=None, split: str=None, playoffs: bool=False):
         self.region = region
-        self.year = str(year)
+
+        if str(year).isnumeric():
+            self.year = str(year)
+        else:
+            raise(TypeError('Year must be of an int or a numeric string'))
+
         self.split = split
 
-        if not isinstance(playoffs, bool):
+        if isinstance(playoffs, bool):
+            self.playoffs = playoffs
+        else:
             raise(TypeError('Playoffs must be of type bool'))
-
-        self.playoffs = playoffs
 
     def _create_connection(self, url: str, render: bool) -> Union[HTMLResponse, None]:
         """_create_connection
