@@ -107,3 +107,23 @@ def test_format_timeLine_players_returns_names(global_json):
 
     keys = list(ret_dict.keys())
     assert keys == ['TL Impact', 'TL Xmithie', 'TL Jensen', 'TL Doublelift', 'TL CoreJJ', 'C9 Licorice', 'C9 Svenskeren', 'C9 Nisqy', 'C9 Sneaky', 'C9 Zeyzal']
+
+
+PID_TEST_JSON = {'MatchHistory': {'participantIdentities':
+                                  [{'player': {'summonerName': 'TL 0'}},
+                                   {'player': {'summonerName': 'TL 1'}},
+                                   {'player': {'summonerName': 'TL 2'}},
+                                   {'player': {'summonerName': 'TL 3'}},
+                                   {'player': {'summonerName': 'TL 4'}},
+                                   {'player': {'summonerName': 'TL 5'}},
+                                   {'player': {'summonerName': 'TL 6'}},
+                                   {'player': {'summonerName': 'TL 7'}},
+                                   {'player': {'summonerName': 'TL 8'}},
+                                   {'player': {'summonerName': 'TL 9'}}]}}
+
+
+def test_pid_creations():
+    pid_dict = parseMatchHist._make_pid_name_dict(PID_TEST_JSON)
+
+    assert pid_dict == dict(zip(range(0, 10), ['TL 0', 'TL 1', 'TL 2', 'TL 3', 'TL 4',
+                                               'TL 5', 'TL 6', 'TL 7', 'TL 8', 'TL 9']))
