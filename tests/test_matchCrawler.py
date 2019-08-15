@@ -15,7 +15,7 @@ from strategies import match_strats
 def test_create_json_links(l):
     res = _create_json_links(l)
 
-    assert res is not None
+    assert res != (None, None)
 
 
 @given(match_strats.invalid_match_historoy_links_sports())
