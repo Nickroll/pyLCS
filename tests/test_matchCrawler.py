@@ -21,10 +21,12 @@ def test_create_json_links(l):
 @given(match_strats.invalid_match_historoy_links_sports())
 def test_create_json_links_warns_sports(l):
     with pytest.warns(UserWarning):
-        _create_json_links(l)
+        res = _create_json_links(l)
+        assert res == (None, None)
 
 
 @given(match_strats.invalid_match_historoy_links_q())
 def test_create_json_links_warns_q(l):
     with pytest.warns(UserWarning):
-        _create_json_links(l)
+        res = _create_json_links(l)
+        assert res == (None, None)
