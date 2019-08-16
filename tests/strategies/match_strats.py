@@ -1,5 +1,4 @@
 import hypothesis.strategies as st
-from hypothesis import given
 
 
 def valid_match_history_links():
