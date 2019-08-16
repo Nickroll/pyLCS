@@ -54,12 +54,12 @@ class liquidCrawler(object):
             return None
 
     # TODO: Consider making this a self object instead of return
-    def _ext_link_creation(self) -> Union[tuple, str, list]:
+    def _ext_link_creation(self) -> Union[str, list]:
         """_post_match_game_links
 
         Uses liquidpedia to retrieve the links to the post match game links for the given region
 
-        :rtype Union[tuple, str]
+        :rtype Union[str, list]
         """
 
         base_link = 'https://liquipedia.net/leagueoflegends/'
@@ -70,22 +70,18 @@ class liquidCrawler(object):
             ext = f'{base_link}LCK/{self.year}/{self.split.capitalize()}/Group_Stage'
         elif self.region.lower() == 'lms':
             ext = f'{base_link}LMS/{self.year}/{self.split.capitalize()}/Group_Stage'
-        elif self.region.lower() in ['lpl', 'china']:
-            ext = []
-            ext.append(f'{base_link}LPL/{self.year}/{self.split.capitalize()}/Group_Stage/Week_1-5')
-            ext.append(f'{base_link}LPL/{self.year}/{self.split.capitalize()}/Group_Stage/Week_6-10')
         elif self.region.lower() in ['eu', 'europe', 'lec']:
             ext = f'{base_link}LEC/{self.year}/{self.split.capitalize()}/Group_Stage'
         elif self.region.lower() == 'academy':
             ext = f'{base_link}LCS/Academy_League/{self.year}/{self.split.capitalize()}/Group_Stage'
         else:
             raise pyLCSExceptions.RegionError(f'{self.region} is not one of LCS, LCK, LMS, '
-                                              'LPL, LEC, or academy')
+                                              'LEC, or academy')
 
         if self.playoffs:
             p_ext = f'{ext[:-11]}Playoffs'
 
-            return (ext, p_ext)
+            return [ext, p_ext]
         else:
             return ext
 
@@ -100,28 +96,33 @@ class liquidCrawler(object):
         """
 
         ret_links = []
-        r = self._create_connection(url=ext_link, render=render)
 
-        if not r:
-            raise(pyLCSExceptions.NoConnectionError('The connection returned was NoneType'))
+        if not isinstance(ext_link, list):
+            ext_link = [ext_link]
 
-        if not r.text:
-            raise(pyLCSExceptions.PageEmptyError(f'The webpage for {ext_link} is empty'
-                                                 'one of region, year, or split is incorrect'))
+        for el in ext_link:
+            r = self._create_connection(url=el, render=render)
 
-        links = r.html.xpath('//a[@title="Match History"]/@href')
+            if not r:
+                raise(pyLCSExceptions.NoConnectionError('The connection returned was NoneType'))
 
-        # Check for empty links and remove them
-        for l in links:
-            if l in ['', ' ']:
-                continue
-            else:
-                ret_links.append(l)
+            if not r.text:
+                raise(pyLCSExceptions.PageEmptyError(f'The webpage for {el} is empty'
+                                                     'one of region, year, or split is incorrect'))
 
-        if len(ret_links) == 0:
-            raise(pyLCSExceptions.LinkLenError('Length of links retrieved was 0.'
-                                               'Either extensions were not properly created or'
-                                               'All hrefs were empty (xpath may be broken)'))
+            links = r.html.xpath('//a[@title="Match History"]/@href')
+
+            # Check for empty links and remove them
+            for l in links:
+                if l in ['', ' ']:
+                    continue
+                else:
+                    ret_links.append(l)
+
+            if len(ret_links) == 0:
+                raise(pyLCSExceptions.LinkLenError('Length of links retrieved was 0.'
+                                                   'Either extensions were not properly created or'
+                                                   'All hrefs were empty (xpath may be broken)'))
 
         return ret_links
 

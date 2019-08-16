@@ -4,7 +4,7 @@ import json
 
 from pyLCS import liquidCrawler, matchCrawler, parseMatchHist
 
-lc = liquidCrawler.liquidCrawler('NA', 2019, 'Spring', False)
+lc = liquidCrawler.liquidCrawler('na', 2019, 'Spring', False)
 links = lc.match_links()
 links = links[:3]
 
@@ -19,6 +19,7 @@ unwanted = {'SKILL_LEVEL_UP', 'ITEM_DESTROYED', 'ITEM_SOLD', 'WARD_PLACED', 'WAR
             'ITEM_UNDO', 'ITEM_PURCHASED'}
 #
 merge = parseMatchHist.parse_match_history(json_data, 100, unwanted)
+print(merge)
 
 with open('merge.json', 'w') as jf:
     json.dump(merge, jf, indent=4)
