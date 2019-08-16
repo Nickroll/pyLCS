@@ -8,7 +8,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from pyLCS.matchCrawler import (_create_json_links, _json_retrival,
                                 download_json_data)
-from strategies import match_strats
+from pyLCS.strategies import match_strats
 
 
 @settings(max_examples=200)
