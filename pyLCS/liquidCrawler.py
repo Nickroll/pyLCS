@@ -64,6 +64,7 @@ class liquidCrawler(object):
 
         base_link = 'https://liquipedia.net/leagueoflegends/'
 
+        # Add ermering region support
         if self.region.lower() in ['na', 'lcs']:
             ext = f'{base_link}LCS/{self.year}/{self.split.capitalize()}/Group_Stage'
         elif self.region.lower() in ['lck', 'korea']:
@@ -83,7 +84,7 @@ class liquidCrawler(object):
 
             return [ext, p_ext]
         else:
-            return ext
+            return [ext]
 
     def _retrieve_post_match_site_links(self, ext_link: str, render: bool) -> list:
         """_retrieve_post_match_site_links
@@ -96,9 +97,6 @@ class liquidCrawler(object):
         """
 
         ret_links = []
-
-        if not isinstance(ext_link, list):
-            ext_link = [ext_link]
 
         for el in ext_link:
             r = self._create_connection(url=el, render=render)

@@ -50,12 +50,12 @@ def test_ext_creation_valid(lc):
     resp = lc._ext_link_creation()
 
     if lc.playoffs:
-        assert isinstance(resp, list)
+        assert len(resp) == 2
         assert 'Playoffs' in resp[1]
     else:
-        assert isinstance(resp, str)
-        assert lc.year in resp
-        assert lc.split.capitalize() in resp
+        assert len(resp) == 1
+        assert lc.year in resp[0]
+        assert lc.split.capitalize() in resp[0]
 
 
 @given(liquid_strats.build_invalid_regions())
