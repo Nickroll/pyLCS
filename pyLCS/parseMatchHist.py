@@ -44,16 +44,15 @@ def _flatten_json(y: dict=None) -> dict:
     return out
 
 
-def _format_matchHistory_players(json_data: dict) -> dict:
+def _format_matchHistory_players(json_data: dict) -> Union[dict, None]:
     """_format_matchHistory_players
 
     Formats the match history to {{player1: [{stat1: value1}]}}
 
     :param json_data (dict): A dict in JSON-like style. Returned by matchCrawler.download_json_data
-    :rtype dict
+    :rtype Union[dict, None]
     """
 
-    flat_mh = _flatten_json(json_data['MatchHistory'])
     return_dict = dict()
 
     # There should always be 10 players in a game, extra check
@@ -61,51 +60,67 @@ def _format_matchHistory_players(json_data: dict) -> dict:
         raise pyLCSExceptions.InvalidPlayerAmount('The number of players in the game is not 10'
                                                   f"it is {len(json_data['MatchHistory']['participantIdentities'])}")
 
+    try:
+        flat_mh = _flatten_json(json_data['MatchHistory'])
+    except KeyError:
+        warn('JSON data lacked a MatchHistory key meaning it was not returned by'
+             'matchCralwer.download_json_data, None returned')
+        return None
+
     for i in range(0, 10):
         key = f'participantIdentities_{i}_player_summonerName'
-        player_name = flat_mh[key]
-        stats_key = f'ants_{i}_'
+        try:
+            player_name = flat_mh[key]
+            stats_key = f'ants_{i}_'
 
-        # Since roles are broken we will add them manually
-        role_dict = {0: 'Top', 1: 'Jungle', 2: 'Middle', 3: 'ADC', 4: 'Support'}
-        if i < 5:
-            return_dict[player_name] = {'role': role_dict[i]}
-        else:
-            return_dict[player_name] = {'role': role_dict[i - 5]}
+            # Since roles are broken we will add them manually
+            role_dict = {0: 'Top', 1: 'Jungle', 2: 'Middle', 3: 'ADC', 4: 'Support'}
+            if i < 5:
+                return_dict[player_name] = {'role': role_dict[i]}
+            else:
+                return_dict[player_name] = {'role': role_dict[i - 5]}
 
-        for k, v in flat_mh.items():
-            if stats_key in k.lower():
-                if 'antid' not in k.lower()[-5:]:
+            for k, v in flat_mh.items():
+                if stats_key in k.lower():
+                    if 'antid' not in k.lower()[-5:]:
 
-                    # Role and lane are not listed correctly so they are useless
-                    if 'role' in k.lower() or 'lane' in k.lower():
-                        continue
+                        # Role and lane are not listed correctly so they are useless
+                        if 'role' in k.lower() or 'lane' in k.lower():
+                            continue
 
-                    # Deltas need to have more than just the last part of the key to make sense
-                    s_key = k.split('_')
-                    if 'Deltas' in s_key[-2]:
-                        return_dict[player_name].update({f'{s_key[-2]}_{s_key[-1]}': v})
-                    # Team ID is unhelpfully 100 or 200 so we just replace
-                    elif 'teamId' in s_key[-1]:
-                        team = player_name.split(' ')[0]
-                        return_dict[player_name].update({s_key[-1]: team})
-                    else:
-                        return_dict[player_name].update({s_key[-1]: v})
+                        # Deltas need to have more than just the last part of the key to make sense
+                        s_key = k.split('_')
+                        if 'Deltas' in s_key[-2]:
+                            return_dict[player_name].update({f'{s_key[-2]}_{s_key[-1]}': v})
+                        # Team ID is unhelpfully 100 or 200 so we just replace
+                        elif 'teamId' in s_key[-1]:
+                            team = player_name.split(' ')[0]
+                            return_dict[player_name].update({s_key[-1]: team})
+                        else:
+                            return_dict[player_name].update({s_key[-1]: v})
+        except KeyError:
+            warn('The JSON data returned did not have the necessary information, None returned')
+            return None
 
     return return_dict
 
 
-def _format_timeLine_players(json_data: dict, minute: Union[int, str]) -> dict:
+def _format_timeLine_players(json_data: dict, minute: Union[int, str]) -> Union[dict, None]:
     """_format_timeLine_players
 
     Formats the timeline information to {player1: {time0: [{stat1: value1}]}}
 
     :param json_data (dict): A json-like dict returned by matchCrawler.download_json_data
     :param minute (Union[int, str]): The last minute in time to gather data for or max for all data
-    :rtype dict
+    :rtype Union[dict, None]
     """
 
-    tl_data = json_data['Timeline']['frames']
+    try:
+        tl_data = json_data['Timeline']['frames']
+    except KeyError:
+        warn('JSON data did not contain Timeline or frames. Was the data from'
+             'matchCrawler.download_json_data. None returned')
+        return None
     tl_return = defaultdict(dict)  # Easy dict nesting with for loop
 
     pid_to_names = _make_pid_name_dict(json_data)
@@ -141,7 +156,7 @@ def _make_pid_name_dict(json_data: dict) -> dict:
     return return_dict
 
 
-def _parse_event_data_players(json_data: dict, timeline_data: dict, minute: Union[int, str], unwanted_types: Union[set, list]) -> dict:
+def _parse_event_data_players(json_data: dict, timeline_data: dict, minute: Union[int, str], unwanted_types: Union[set, list]) -> Union[dict, None]:
     """_parse_event_data_players
 
     Specifically parses the event data part of the timeline JSON information
@@ -150,10 +165,16 @@ def _parse_event_data_players(json_data: dict, timeline_data: dict, minute: Unio
     :param timeline_data (dict): The dict returned from _format_timeLine_players
     :param minute (Union[int, str]): The last minute to collect data from or max for all
     :param unwanted_type (Union[set, list]): The unwanted event stats
-    :rtype dict
+    :rtype Union[dict, None]
     """
 
-    frames = json_data['Timeline']['frames']
+    try:
+        frames = json_data['Timeline']['frames']
+    except KeyError:
+        warn('JSON data is missing Timeline and frame. Was the data created by'
+             'matchCrawler.download_json_data? None returned')
+        return None
+
     ids_to_name = _make_pid_name_dict(json_data)
 
     for idx, i in enumerate(frames[:minute]):
@@ -199,16 +220,22 @@ def _parse_event_data_players(json_data: dict, timeline_data: dict, minute: Unio
     return timeline_data
 
 
-def _game_information(json_data: dict) -> dict:
+def _game_information(json_data: dict) -> Union[dict, None]:
     """_game_information
 
     Retrieves basic game information like gameId, gameDuration, gameVersion and platformId
 
     :param json_data (dict): The full JSON dict returned my matchCrawler.download_json_data
-    :rtype dict
+    :rtype Union[dict, None]
     """
 
-    data = json_data['MatchHistory']
+    try:
+        data = json_data['MatchHistory']
+    except KeyError:
+        warn('JSON data did not have a MatchHistory key. Was it created by'
+             'matchCrawler.download_json_data? None returned')
+        return None
+
     ret_dict = dict()
     for k, v in data.items():
         # The data here is just in k:v pair not nested in any way
@@ -225,16 +252,22 @@ def _game_information(json_data: dict) -> dict:
     return ret_dict
 
 
-def _format_team_information(json_data: dict) -> dict:
+def _format_team_information(json_data: dict) -> Union[dict, None]:
     """_format_team_information
 
     Gets the basic team information form the JSON object
 
     :param json_data (dict): A JSON-like dict returned by matchCrawler.download_json_data
-    :rtype dict
+    :rtype Union[dict, None]
     """
     ret_data = dict()
-    data = json_data['MatchHistory']['teams']
+
+    try:
+        data = json_data['MatchHistory']['teams']
+    except KeyError:
+        warn('JSON data did not have MatchHistory team information. Was the data created by'
+             'matchCrawler.download_json_data? None returned')
+        return None
 
     team_0 = json_data['MatchHistory']['participantIdentities'][0]['player']['summonerName'].split(' ')[0]
     team_1 = json_data['MatchHistory']['participantIdentities'][9]['player']['summonerName'].split(' ')[0]
@@ -258,6 +291,11 @@ def _merge_formats_together(match_history: dict, event_data: dict, team: dict) -
     :param team (dict): The dict returned by _format_team_information
     :rtype dict
     """
+
+    if all(l is None for l in [match_history, event_data, team]):
+        raise(pyLCSExceptions.AllNoneError('All of match_history, event_data, and team_data are'
+                                           'None. Make sure the data passed to parse_match_history'
+                                           'Was generated by matchCrawler.download_json_data.'))
 
     game_info = dict()
     game_info['Players'] = match_history

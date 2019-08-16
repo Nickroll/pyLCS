@@ -31,3 +31,9 @@ class InvalidPlayerAmount(Exception):
     Raises when the number of players in a game is not 10
     """
     pass
+
+
+class AllNoneError(Exception):
+    """AllNoneError
+    Raises when all of the data is None
+    """
