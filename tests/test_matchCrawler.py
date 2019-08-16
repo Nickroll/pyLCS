@@ -62,3 +62,30 @@ def test_json_retrival_warns_invalid():
         resp = _json_retrival('https://invalidjson.com')
 
     assert resp is None
+
+
+MH_JSON_LINK = 'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976'
+TL_JSON_LINK = 'https://acs.leagueoflegends.com/v1/stats/game/ESPORTSTMNT02/992625/timeline?gameHash=76f99e0eb8658976'
+MATCH_LINK_TEST = 'https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976'
+
+
+@responses.activate
+def test_download_works_with_list():
+    responses.add(responses.GET, MH_JSON_LINK, status=200, json={'mhstats': 1})
+    responses.add(responses.GET, TL_JSON_LINK, status=200, json={'tlstats': 1})
+    resp = download_json_data([MATCH_LINK_TEST])
+
+    assert isinstance(resp, list)
+    assert resp[0] == {'MatchHistory': {'mhstats': 1},
+                       'Timeline': {'tlstats': 1}}
+
+
+@responses.activate
+def test_download_works_without_list():
+    responses.add(responses.GET, MH_JSON_LINK, status=200, json={'mhstats': 1})
+    responses.add(responses.GET, TL_JSON_LINK, status=200, json={'tlstats': 1})
+    resp = download_json_data(MATCH_LINK_TEST)
+
+    assert isinstance(resp, list)
+    assert resp[0] == {'MatchHistory': {'mhstats': 1},
+                       'Timeline': {'tlstats': 1}}
