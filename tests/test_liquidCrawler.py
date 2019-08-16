@@ -64,3 +64,80 @@ def test_ext_creation_invalid_region(create_liquidCrawler_base, r):
 
     with pytest.raises(pyLCSExceptions.RegionError):
         create_liquidCrawler_base._ext_link_creation()
+
+
+HTML_BODY = '<html><body><a href="https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976&amp;tab=overview" title="Match History" target="_blank" rel="nofollow noreferrer noopener"><img alt="Match History" src="/commons/images/c/ce/Match_Info_Stats.png" width="32" height="32"></a></body></html>'
+HTML_RETURN = ['https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976&tab=overview',
+               'https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTSTMNT02/992641?gameHash=19f754ef4c0360d7',
+               'https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTSTMNT02/992659?gameHash=4c30fc1e819c44c5&tab=overview']
+FAIL_BODY = '<html><body><a title="Match History"</a></body></html>'
+FAIL_WITH_HREF = '<html><body><a href="" title="Match History"</a></body></html>'
+
+
+@responses.activate
+def test_retrieve_post_returns_list(create_liquidCrawler_base):
+    responses.add(responses.GET, 'http://test.com', status=200, body=HTML_BODY)
+    links = create_liquidCrawler_base._retrieve_post_match_site_links(['http://test.com'], False)
+
+    assert isinstance(links, list)
+
+
+@responses.activate
+def test_retrieve_post_returns_correct(create_liquidCrawler_base):
+    responses.add(responses.GET, 'http://test.com', status=200, body=HTML_BODY)
+    links = create_liquidCrawler_base._retrieve_post_match_site_links(['http://test.com'], False)
+
+    assert all(l in HTML_RETURN for l in links)
+
+
+@responses.activate
+def test_retrieve_post_returns_linkLenError(create_liquidCrawler_base):
+    responses.add(responses.GET, 'http://test.com', status=200, body=FAIL_BODY)
+    with pytest.raises(pyLCSExceptions.LinkLenError):
+        create_liquidCrawler_base._retrieve_post_match_site_links(['http://test.com'], False)
+
+
+@responses.activate
+def test_retrieve_post_returns_linkLenError_href(create_liquidCrawler_base):
+    responses.add(responses.GET, 'http://test.com', status=200, body=FAIL_WITH_HREF)
+    with pytest.raises(pyLCSExceptions.LinkLenError):
+        create_liquidCrawler_base._retrieve_post_match_site_links(['http://test.com'], False)
+
+
+BAD_EXT_YEAR_LINK = 'https://liquipedia.net/leagueoflegends/LCS/100/Spring/Group_Stage'
+BAD_EXT_SPLIT_LINK = 'https://liquipedia.net/leagueoflegends/LCS/2019/Thisfailsduh/Group_Stage'
+
+
+@responses.activate
+def test_match_links_bad_year(create_liquidCrawler_base):
+    responses.add(responses.GET, BAD_EXT_YEAR_LINK, status=200,)
+    create_liquidCrawler_base.year = '100'
+
+    with pytest.raises(pyLCSExceptions.PageEmptyError):
+        create_liquidCrawler_base.match_links(render=False)
+
+
+@responses.activate
+def test_match_links_bad_split(create_liquidCrawler_base):
+    responses.add(responses.GET, BAD_EXT_SPLIT_LINK, status=200,)
+    create_liquidCrawler_base.split = 'Thisfailsduh'
+
+    with pytest.raises(pyLCSExceptions.PageEmptyError):
+        create_liquidCrawler_base.match_links(render=False)
+
+
+@responses.activate
+def test_match_links_bad_region(create_liquidCrawler_base):
+    create_liquidCrawler_base.region = 'notaregion'
+
+    with pytest.raises(pyLCSExceptions.RegionError):
+        create_liquidCrawler_base.match_links(render=False)
+
+
+TO_MOCK = 'https://liquipedia.net/leagueoflegends/LCS/2019/Spring/Group_Stage'
+@responses.activate
+def test_match_links_returns_list(create_liquidCrawler_base):
+    responses.add(responses.GET, TO_MOCK, status=202, body=HTML_BODY)
+    links = create_liquidCrawler_base.match_links(render=False)
+
+    assert all(l in HTML_RETURN for l in links)
