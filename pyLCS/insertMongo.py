@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
-
+Function for insertion of JSON-like data into a mongo database using JSON-like data returned by
+parseMatchHist.parse_match_history().
 """
 
 from pprint import pprint

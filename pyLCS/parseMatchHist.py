@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """
-
+Contains the funcitons necessary to parse the match history data returned by the matchCrawler set of
+functions. Data is returned in a JSON-like form.
 """
+
 from collections import defaultdict
 from typing import List, Union
 from warnings import warn
@@ -92,6 +94,7 @@ def _format_matchHistory_players(json_data: dict) -> Union[dict, None]:
                         s_key = k.split('_')
                         if 'Deltas' in s_key[-2]:
                             return_dict[player_name].update({f'{s_key[-2]}_{s_key[-1]}': v})
+
                         # Team ID is unhelpfully 100 or 200 so we just replace
                         elif 'teamId' in s_key[-1]:
                             team = player_name.split(' ')[0]
@@ -121,8 +124,8 @@ def _format_timeLine_players(json_data: dict, minute: Union[int, str]) -> Union[
         warn('JSON data did not contain Timeline or frames. Was the data from'
              'matchCrawler.download_json_data. None returned')
         return None
-    tl_return = defaultdict(dict)  # Easy dict nesting with for loop
 
+    tl_return = defaultdict(dict)  # Easy dict nesting with for loop
     pid_to_names = _make_pid_name_dict(json_data)
 
     for idx, time in enumerate(tl_data[:minute]):
@@ -181,11 +184,14 @@ def _parse_event_data_players(json_data: dict, timeline_data: dict, minute: Unio
         for e in i['events']:
             if e['type'] not in unwanted_types:
                 to_insert = {'event': e}
+
                 # Ids need to be fixed again
                 for k, v in e.items():
                     key_id = None
+
                     # For the creator or the killer (aka who the stat goes under)
                     if k in ['killerId', 'creatorId', 'participantId']:
+
                         # Checks to make sure minions are not the spawner as there id is 0
                         if int(v) == 0:
                             continue
@@ -206,6 +212,7 @@ def _parse_event_data_players(json_data: dict, timeline_data: dict, minute: Unio
                             to_insert['event'][k] = updated_ids
 
                     if key_id:
+
                         # Fixing the time as it is in milisecondsa
                         to_insert['event']['timestamp'] /= 1000
                         minutes = to_insert['event']['timestamp'] / 60
@@ -238,6 +245,7 @@ def _game_information(json_data: dict) -> Union[dict, None]:
 
     ret_dict = dict()
     for k, v in data.items():
+
         # The data here is just in k:v pair not nested in any way
         if isinstance(v, (dict, list)):
             continue
@@ -330,6 +338,7 @@ def parse_match_history(json_data: List[dict]=None, minute: Union[int, str]='max
     ret_list = list()
 
     for i in json_data:
+
         # Finding the max game length
         max_length = int(i['MatchHistory']['gameDuration'] / 60)
 

@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 """
 Contains the functions necessary to create the links to the JSON data from the match history links
-provided to it. The data is then downloaded in JSON form and returned as a
-{match_history: info, timeline: info}
+provided to it. The data is then downloaded in JSON form
 """
 
 from time import sleep
