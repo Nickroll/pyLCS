@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 """
-Functions that parse the match history JSON. The data is returned as a dict of
-{gameId: [[player1], [player2]]}. The columns returned by get_columns are in the same order as the
-values returned by get_stats. The values are kept seperate as they were designed to be used with an
-sqlite3 db. However, the function merge_stats_and_column will create a new dict of
-{Playername1: {stat1: value, stat2: value2}, Playername2: {stat1: value, stat2: value2}}
-"""
 
-import json
+"""
+from collections import defaultdict
 from typing import List, Union
+from warnings import warn
+
+from .exceptions import pyLCSExceptions
 
 
 def _flatten_json(y: dict=None) -> dict:
@@ -42,179 +40,331 @@ def _flatten_json(y: dict=None) -> dict:
             out[name[:-1]] = x
 
     flatten(y)
+
     return out
 
 
-def _parse_player_json_data(json_data: dict=None) -> dict:
-    """_parse_player_json_data
+def _format_matchHistory_players(json_data: dict) -> Union[dict, None]:
+    """_format_matchHistory_players
 
+    Formats the match history to {{player1: [{stat1: value1}]}}
 
-    Flattens the JSON file then pulls out all the players data and retuns it as a dict
-    Example:
-        {gameId: {TL Impact: [stats], TL Doublelift: [stats]}}
-
-    :param json_data (dict): JSON data returned from the match history page
-    :rtype dict
+    :param json_data (dict): A dict in JSON-like style. Returned by matchCrawler.download_json_data
+    :rtype Union[dict, None]
     """
 
-    cols = list()
-    flat_json = _flatten_json(json_data)
+    return_dict = dict()
 
-    ret_dict = {flat_json['gameId']: []}
+    # There should always be 10 players in a game, extra check
+    if len(json_data['MatchHistory']['participantIdentities']) != 10:
+        raise pyLCSExceptions.InvalidPlayerAmount('The number of players in the game is not 10'
+                                                  f"it is {len(json_data['MatchHistory']['participantIdentities'])}")
+
+    try:
+        flat_mh = _flatten_json(json_data['MatchHistory'])
+    except KeyError:
+        warn('JSON data lacked a MatchHistory key meaning it was not returned by'
+             'matchCralwer.download_json_data, None returned')
+        return None
 
     for i in range(0, 10):
         key = f'participantIdentities_{i}_player_summonerName'
-        player_name = flat_json[key]
-        stats_key = f'ants_{i}_'
-        stats = [player_name]
-        stats.append(i)
+        try:
+            player_name = flat_mh[key]
+            stats_key = f'ants_{i}_'
 
-        for k, v in flat_json.items():
-            if stats_key in k.lower():
-                if 'antid' not in k.lower()[-5:]:
-                    if 'role' in k.lower() or 'lane' in k.lower():
-                        continue
-                    else:
-                        stats.append(v)
-                        cols.append(k)
-
-        ret_dict[flat_json['gameId']].append(stats)
-
-    return cols, ret_dict
-
-
-def _column_names_match_hist(col_data: list=None) -> list:
-    """_column_names_match_hist
-
-    Gets the names of the columns for the match history data
-
-    :param json_data (dict): Flat JSON data returned from the match history page
-    :rtype list
-    """
-
-    stats_key = f'ants_0_'
-    ret_list = ['gameId', 'participantId']
-
-    for i in col_data:
-        if stats_key in i:
-            names = i.split('_')
-
-            if 'Deltas' in names[-2]:
-                ret_list.append(f'{names[-2]}_{names[-1]}')
+            # Since roles are broken we will add them manually
+            role_dict = {0: 'Top', 1: 'Jungle', 2: 'Middle', 3: 'ADC', 4: 'Support'}
+            if i < 5:
+                return_dict[player_name] = {'role': role_dict[i]}
             else:
-                ret_list.append(names[-1])
+                return_dict[player_name] = {'role': role_dict[i - 5]}
 
-    ret_list.append('PlayerName')
-    return ret_list
+            for k, v in flat_mh.items():
+                if stats_key in k.lower():
+                    if 'antid' not in k.lower()[-5:]:
+
+                        # Role and lane are not listed correctly so they are useless
+                        if 'role' in k.lower() or 'lane' in k.lower():
+                            continue
+
+                        # Deltas need to have more than just the last part of the key to make sense
+                        s_key = k.split('_')
+                        if 'Deltas' in s_key[-2]:
+                            return_dict[player_name].update({f'{s_key[-2]}_{s_key[-1]}': v})
+                        # Team ID is unhelpfully 100 or 200 so we just replace
+                        elif 'teamId' in s_key[-1]:
+                            team = player_name.split(' ')[0]
+                            return_dict[player_name].update({s_key[-1]: team})
+                        else:
+                            return_dict[player_name].update({s_key[-1]: v})
+        except KeyError:
+            warn('The JSON data returned did not have the necessary information, None returned')
+            return None
+
+    return return_dict
 
 
-def _create_column_name_and_type(column_name: list=None, stats_data: dict=None) -> list:
-    """_create_column_name_and_type
+def _format_timeLine_players(json_data: dict, minute: Union[int, str]) -> Union[dict, None]:
+    """_format_timeLine_players
 
-    Creates a list of [(column_name, column_type)] for all the columns to be used with SQL
+    Formats the timeline information to {player1: {time0: [{stat1: value1}]}}
 
-    :param column_name (list): The list of columns to be used in the SQL DB returned by _column_names_match_hist
-    :param stats_data (dict): The dict returned by _parse_player_json_data
-    :rtype list
+    :param json_data (dict): A json-like dict returned by matchCrawler.download_json_data
+    :param minute (Union[int, str]): The last minute in time to gather data for or max for all data
+    :rtype Union[dict, None]
     """
+
+    try:
+        tl_data = json_data['Timeline']['frames']
+    except KeyError:
+        warn('JSON data did not contain Timeline or frames. Was the data from'
+             'matchCrawler.download_json_data. None returned')
+        return None
+    tl_return = defaultdict(dict)  # Easy dict nesting with for loop
+
+    pid_to_names = _make_pid_name_dict(json_data)
+
+    for idx, time in enumerate(tl_data[:minute]):
+        for i in time['participantFrames']:
+            tl_return[time['participantFrames'][i]['participantId'] - 1][idx] = time['participantFrames'][i]
+
+            # Fix for pid as it differes from match history in the number here RITO PLS
+            tl_return[time['participantFrames'][i]['participantId'] - 1][idx]['participantId'] = pid_to_names[tl_return[time['participantFrames'][i]['participantId'] - 1][idx]['participantId'] - 1]
+
+    # Repalce ids with name
+    for k, v in pid_to_names.items():
+        tl_return[v] = tl_return.pop(k)
+
+    return tl_return
+
+
+def _make_pid_name_dict(json_data: dict) -> dict:
+    """_make_pid_name_dict
+
+    Creates a dictonary of {pid: playername} for easy conversion later
+
+    :param json_data (dict): The JSON like dict returned from matchCrawler.download_json_data
+    :rtype dict
+    """
+
+    return_dict = dict.fromkeys(range(0, 10))
+
+    for k, _ in return_dict.items():
+        return_dict[k] = json_data['MatchHistory']['participantIdentities'][k]['player']['summonerName']
+
+    return return_dict
+
+
+def _parse_event_data_players(json_data: dict, timeline_data: dict, minute: Union[int, str], unwanted_types: Union[set, list]) -> Union[dict, None]:
+    """_parse_event_data_players
+
+    Specifically parses the event data part of the timeline JSON information
+
+    :param json_data (dict): The JSON-like dict rturned by matchCrawler.download_json_data
+    :param timeline_data (dict): The dict returned from _format_timeLine_players
+    :param minute (Union[int, str]): The last minute to collect data from or max for all
+    :param unwanted_type (Union[set, list]): The unwanted event stats
+    :rtype Union[dict, None]
+    """
+
+    try:
+        frames = json_data['Timeline']['frames']
+    except KeyError:
+        warn('JSON data is missing Timeline and frame. Was the data created by'
+             'matchCrawler.download_json_data? None returned')
+        return None
+
+    ids_to_name = _make_pid_name_dict(json_data)
+
+    for idx, i in enumerate(frames[:minute]):
+        for e in i['events']:
+            if e['type'] not in unwanted_types:
+                to_insert = {'event': e}
+                # Ids need to be fixed again
+                for k, v in e.items():
+                    key_id = None
+                    # For the creator or the killer (aka who the stat goes under)
+                    if k in ['killerId', 'creatorId', 'participantId']:
+                        # Checks to make sure minions are not the spawner as there id is 0
+                        if int(v) == 0:
+                            continue
+                        else:
+                            key_id = int(v) - 1
+
+                        key_id = ids_to_name[key_id]
+                        team = key_id.split(' ')[0]
+
+                    if k == 'teamId':
+                        to_insert['event'][k] = team
+
+                    if 'Id' in k and k not in ['itemId', 'teamId']:
+                        if isinstance(v, int):
+                            to_insert['event'][k] = ids_to_name[v - 1]
+                        elif isinstance(v, list):
+                            updated_ids = [ids_to_name[pids - 1] for pids in v]
+                            to_insert['event'][k] = updated_ids
+
+                    if key_id:
+                        # Fixing the time as it is in milisecondsa
+                        to_insert['event']['timestamp'] /= 1000
+                        minutes = to_insert['event']['timestamp'] / 60
+                        seconds = int(round(minutes % 1 * 60, 0))
+                        to_insert['event']['timestamp'] = float(f'{int(minutes)}.{seconds}')
+
+                        timeline_data[key_id][idx] = dict(timeline_data[key_id][idx], **to_insert)
+
+            else:
+                continue
+
+    return timeline_data
+
+
+def _game_information(json_data: dict) -> Union[dict, None]:
+    """_game_information
+
+    Retrieves basic game information like gameId, gameDuration, gameVersion and platformId
+
+    :param json_data (dict): The full JSON dict returned my matchCrawler.download_json_data
+    :rtype Union[dict, None]
+    """
+
+    try:
+        data = json_data['MatchHistory']
+    except KeyError:
+        warn('JSON data did not have a MatchHistory key. Was it created by'
+             'matchCrawler.download_json_data? None returned')
+        return None
+
+    ret_dict = dict()
+    for k, v in data.items():
+        # The data here is just in k:v pair not nested in any way
+        if isinstance(v, (dict, list)):
+            continue
+        else:
+            ret_dict[k] = v
+
+    # Fixing game duration
+    minutes = ret_dict['gameDuration'] / 60
+    seconds = int(round(minutes % 1 * 60, 0))
+    ret_dict['gameDuration'] = float(f'{int(minutes)}.{seconds}')
+
+    return ret_dict
+
+
+def _format_team_information(json_data: dict) -> Union[dict, None]:
+    """_format_team_information
+
+    Gets the basic team information form the JSON object
+
+    :param json_data (dict): A JSON-like dict returned by matchCrawler.download_json_data
+    :rtype Union[dict, None]
+    """
+    ret_data = dict()
+
+    try:
+        data = json_data['MatchHistory']['teams']
+    except KeyError:
+        warn('JSON data did not have MatchHistory team information. Was the data created by'
+             'matchCrawler.download_json_data? None returned')
+        return None
+
+    team_0 = json_data['MatchHistory']['participantIdentities'][0]['player']['summonerName'].split(' ')[0]
+    team_1 = json_data['MatchHistory']['participantIdentities'][9]['player']['summonerName'].split(' ')[0]
+
+    ret_data[team_0] = data[0]
+    ret_data[team_1] = data[1]
+
+    ret_data[team_0]['teamId'] = team_0
+    ret_data[team_1]['teamId'] = team_1
+
+    return ret_data
+
+
+def _merge_formats_together(match_history: dict, event_data: dict, team: dict) -> dict:
+    """_merge_formats_together
+
+    Merges the previous JSON-like dicts together to create one master dict
+
+    :param match_history (dict): The dict returned by _format_matchHistory_players
+    :param event_data (dict): The dict returned by _parse_event_data_players
+    :param team (dict): The dict returned by _format_team_information
+    :rtype dict
+    """
+
+    if all(l is None for l in [match_history, event_data, team]):
+        raise(pyLCSExceptions.AllNoneError('All of match_history, event_data, and team_data are'
+                                           'None. Make sure the data passed to parse_match_history'
+                                           'Was generated by matchCrawler.download_json_data.'))
+
+    game_info = dict()
+    game_info['Players'] = match_history
+    game_info['Team'] = team
+
+    for p in game_info['Players']:
+        game_info['Players'][p]['Minute'] = {}
+
+    for k, v in event_data.items():
+        game_info['Players'][k]['Minute'].update(v)
+
+    return game_info
+
+
+def parse_match_history(json_data: List[dict]=None, minute: Union[int, str]='max', unwanted_types: Union[set, list]=None) -> dict:
+    """parse_match_history
+
+    Parse the match history datat that is returned by matchCrawler.download_json_data. The data is
+    returned as a list of dicts in a easier to read format and for insertion into a mongoDB. The
+    dict contiains headings Player, Team, Game. The player info is 1 json-like object per player,
+    team is the same per team, and game is just the game info.
+
+    :param json_data (List[dict]): The json-like dict from matchCrawler.download_json_data
+    :param minute (Union[int, str]): The number of minutes you want timeline data for or max for all
+    :param unwanted_types (Union[set, list]): Unwanted event types, can be None
+    :rtype dict
+    """
+
+    if not isinstance(json_data, list):
+        raise(TypeError(f'JSON_data must be of type list not {type(json_data)}'))
 
     ret_list = list()
 
-    # This is a terrible hack that needs to be fixed at some point
-    column_name.remove('PlayerName')
-    column_name.remove('gameId')
+    for i in json_data:
+        # Finding the max game length
+        max_length = int(i['MatchHistory']['gameDuration'] / 60)
 
-    stats = list(stats_data.values())[0][0][1:]
-    tup_list = list(zip(column_name, stats))
+        if isinstance(minute, str):
+            if minute.isnumeric():
+                minute = int(minute)
+            elif minute.lower() == 'max':
+                minute = max_length
+            else:
+                raise TypeError('Minute must be of type int or the string max ')
 
-    for tup in tup_list:
-        name = tup[0]
-        if isinstance(tup[1], (int, float)):
-            col_type = 'real'
-        else:
-            col_type = 'text'
+        # Handle longer than max length
+        if minute > max_length:
+            minute = max_length
+            warn(f'Minute provided was greater than the game length. Minute was set to the max game length')
 
-        ret_list.append((name, col_type))
+        elif minute < max_length:
+            minute += 1
 
-    ret_list.extend([('gameId', 'real'), ('PlayerName', 'text')])
+        mh_data = _format_matchHistory_players(i)
+        timeline_data = _format_timeLine_players(i, minute)
+        event_data = _parse_event_data_players(i, timeline_data, minute, unwanted_types)
+        team_data = _format_team_information(i)
+        game_info = _game_information(i)
+
+        merge = _merge_formats_together(mh_data, event_data, team_data)
+
+        parse_dict = {'Player': {}, 'Team': {}, 'GameInfo': game_info}
+
+        for k, v in merge['Players'].items():
+            parse_dict['Player'][k] = v
+
+        for k, v in merge['Team'].items():
+            parse_dict['Team'][k] = v
+
+        ret_list.append(parse_dict)
 
     return ret_list
-
-
-def get_stats(json_data: Union[str, dict]=None) -> dict:
-    """get_stats
-
-    Takes either a JSON file, as str, or JSON data loaded via the JSON module. Will return the stats as:
-        {gameId: [[Player 1 Stats], [Player 2 Stats]]}
-
-    :param json_file (Union[str, dict]): The path to the JSON file containing the stats or the JSON dict
-    :rtype dict
-    """
-
-    if isinstance(json_data, str):
-        with open(json_data, 'r') as jf:
-            data = json.load(jf)
-
-    elif isinstance(json_data, dict):
-        data = json_data
-
-    else:
-        raise TypeError(f'{type(json_data)} is wrong type, must be of type str or dict')
-
-    _, stats = _parse_player_json_data(data)
-
-    return stats
-
-
-def get_columns(json_data: Union[str, dict]=None) -> List[tuple]:
-    """get_columns
-
-    Takes a JSON file or JSON data loaded via the JSON module and retuns the column names for use in the
-    SQL table. Only needs to be run when creating the table the first time, or to check on the columns
-    being created
-
-    :param json_data (Union[str, dict]): The path to the JSON file or the JSON dict
-    :rtype List[tuple]
-    """
-
-    if isinstance(json_data, str):
-        with open(json_data, 'r') as jf:
-            data = json.load(jf)
-
-    elif isinstance(json_data, dict):
-        data = json_data
-
-    else:
-        raise TypeError(f'{type(json_data)} is wrong type, must be of type str or dict')
-
-    cols, stats = _parse_player_json_data(data)
-    cols = _column_names_match_hist(cols)
-    cols = _create_column_name_and_type(cols, stats)
-
-    return cols
-
-
-def merge_stats_and_column(stats: dict=None, cols: List[tuple]=None) -> dict:
-    """merge_stats_and_column
-
-    Merges the players column and stats into one dictonary:
-
-    {Playername1: {stat1: value, stat2: value2}, Playername2: {stat1: value, stat2: value2}}
-
-    :param stats (dict): The stats rturned by get_stats
-    :param cols (List[tuple]): The column returned by get_column
-    :rtype dict
-    """
-
-    keys = [i[0] for i in cols]
-    ret_dict = dict()
-
-    for k, v in stats.items():
-        for i in v:
-            values = i[1:]
-            values.extend([k, i[0]])
-
-            ret_dict[values[-1]] = dict(zip(keys, values))
-            ret_dict[values[-1]].pop('PlayerName')
-
-    return ret_dict

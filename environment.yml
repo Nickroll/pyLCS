@@ -5,7 +5,8 @@ channels:
 dependencies:
   - blas=1.0=mkl
   - ca-certificates=2019.5.15=0
-  - certifi=2019.6.16=py37_0
+  - certifi=2019.6.16=py37_1
+  - dnspython=1.16.0=py37_0
   - entrypoints=0.3=py37_0
   - flake8=3.7.7=py37_0
   - intel-openmp=2019.3=199
@@ -26,6 +27,7 @@ dependencies:
   - pip=19.0.3=py37_0
   - pycodestyle=2.5.0=py37_0
   - pyflakes=2.1.1=py37_0
+  - pymongo=3.8.0=py37h0a44026_1
   - python=3.7.3=h359304d_0
   - python-dateutil=2.8.0=py37_0
   - pytz=2019.1=py_0
