@@ -5,10 +5,13 @@ Retrieves all the necessary game data from the liquidpedia game site. Finds the 
 history pages and returns them for use later.
 """
 
-from exceptions import pyLCSExceptions
+from time import sleep
 from typing import Union
+from warnings import warn
 
 from requests_html import HTMLResponse, HTMLSession
+
+from .exceptions import pyLCSExceptions
 
 
 class liquidCrawler(object):
@@ -43,13 +46,30 @@ class liquidCrawler(object):
         """
 
         session = HTMLSession()
-        r = session.get(url)
+        if url is not None:
+            r = session.get(url)
 
         if r.ok:
             if render:
                 r.html.render()
             return r
+
         else:
+            warn('Unable to get a response, sleeping for 5 seconds and then re-trying link'
+                 f'{url} after 5 seconds.')
+            sleep(5)
+            to_rerun = url
+
+        if to_rerun:
+            r = session.get(url)
+            if render:
+                r.html.render()
+
+        if r.ok:
+            return r
+        else:
+            # Cannot establish a connection to the site
+            warn(f'Unable to retrieve data for {url}. None was inserted into response')
             return None
 
     # TODO: Consider making this a self object instead of return
@@ -65,27 +85,38 @@ class liquidCrawler(object):
 
         # Add ermering region support
         if self.region.lower() in ['na', 'lcs']:
-            ext = f'{base_link}LCS/{self.year}/{self.split.capitalize()}/Group_Stage'
+            ext = [f'{base_link}LCS/{self.year}/{self.split.capitalize()}/Group_Stage']
         elif self.region.lower() in ['lck', 'korea']:
-            ext = f'{base_link}LCK/{self.year}/{self.split.capitalize()}/Group_Stage'
+            ext = [f'{base_link}LCK/{self.year}/{self.split.capitalize()}/Group_Stage']
         elif self.region.lower() == 'lms':
-            ext = f'{base_link}LMS/{self.year}/{self.split.capitalize()}/Group_Stage'
+            ext = [f'{base_link}LMS/{self.year}/{self.split.capitalize()}/Group_Stage']
         elif self.region.lower() in ['eu', 'europe', 'lec']:
-            ext = f'{base_link}LEC/{self.year}/{self.split.capitalize()}/Group_Stage'
+            ext = [f'{base_link}LEC/{self.year}/{self.split.capitalize()}/Group_Stage']
         elif self.region.lower() == 'academy':
-            ext = f'{base_link}LCS/Academy_League/{self.year}/{self.split.capitalize()}/Group_Stage'
+            ext = [f'{base_link}LCS/Academy_League/{self.year}/{self.split.capitalize()}/Group_Stage']
+        elif self.region.lower() == 'all':
+            ext = [f'{base_link}LCS/{self.year}/{self.split.capitalize()}/Group_Stage',
+                   f'{base_link}LCK/{self.year}/{self.split.capitalize()}/Group_Stage',
+                   f'{base_link}LMS/{self.year}/{self.split.capitalize()}/Group_Stage',
+                   f'{base_link}LEC/{self.year}/{self.split.capitalize()}/Group_Stage',
+                   f'{base_link}LCS/Academy_League/{self.year}/{self.split.capitalize()}/Group_Stage']
+
         else:
             raise pyLCSExceptions.RegionError(f'{self.region} is not one of LCS, LCK, LMS, '
-                                              'LEC, or academy')
+                                              'LEC, academy, or all')
 
         if self.playoffs:
-            p_ext = f'{ext[:-11]}Playoffs'
+            p_ext = list()
+            for e in ext:
+                p_ext.append(f'{e[:-11]}Playoffs')
 
-            return [ext, p_ext]
+            ext.extend(p_ext)
+            return ext
+
         else:
-            return [ext]
+            return ext
 
-    def _retrieve_post_match_site_links(self, ext_link: str, render: bool) -> list:
+    def _retrieve_post_match_site_links(self, ext_link: list, render: bool) -> list:
         """_retrieve_post_match_site_links
 
         Uses xpath to find the href links to the match history pages

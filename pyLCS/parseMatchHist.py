@@ -5,9 +5,10 @@ functions. Data is returned in a JSON-like form.
 """
 
 from collections import defaultdict
-from exceptions import pyLCSExceptions
 from typing import List, Union
 from warnings import warn
+
+from .exceptions import pyLCSExceptions
 
 
 def _flatten_json(y: dict=None) -> dict:
@@ -317,8 +318,8 @@ def _merge_formats_together(match_history: dict, event_data: dict, team: dict) -
     return game_info
 
 
-def parse_match_history(json_data: List[dict]=None, minute: Union[int, str]='max', unwanted_types: Union[set, list]=None) -> dict:
-    """parse_match_history
+def parse_MH(json_data: List[dict], minute: Union[int, str], unwanted_types: Union[set, list]) -> dict:
+    """parse_MH
 
     Parse the match history datat that is returned by matchCrawler.download_json_data. The data is
     returned as a list of dicts in a easier to read format and for insertion into a mongoDB. The

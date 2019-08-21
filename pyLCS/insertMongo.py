@@ -4,11 +4,10 @@ Function for insertion of JSON-like data into a mongo database using JSON-like d
 parseMatchHist.parse_match_history().
 """
 
-from pprint import pprint
 from typing import List, Union
 
 
-def insert_into_mongoDB(merged_data: Union[str, List[dict]]=None, collection_set: str=None, database: str=None, collection: str=None) -> None:
+def insert_into_mongoDB(merged_data: Union[str, List[dict]], collection_set: str, database: str, collection: str) -> None:
     """insert_into_mongoDB
 
     Insertes data returned by parseMatchHist.parse_match_history into a mongoDB collection
