@@ -5,10 +5,9 @@ functions. Data is returned in a JSON-like form.
 """
 
 from collections import defaultdict
+from exceptions import pyLCSExceptions
 from typing import List, Union
 from warnings import warn
-
-from .exceptions import pyLCSExceptions
 
 
 def _flatten_json(y: dict=None) -> dict:

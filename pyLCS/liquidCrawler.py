@@ -5,11 +5,10 @@ Retrieves all the necessary game data from the liquidpedia game site. Finds the 
 history pages and returns them for use later.
 """
 
+from exceptions import pyLCSExceptions
 from typing import Union
 
 from requests_html import HTMLResponse, HTMLSession
-
-from .exceptions import pyLCSExceptions
 
 
 class liquidCrawler(object):
