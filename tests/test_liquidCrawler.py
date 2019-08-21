@@ -40,7 +40,8 @@ def test_create_connection_valid(create_liquidCrawler_base):
 @responses.activate
 def test_create_connection_invalid(create_liquidCrawler_base):
     responses.add(responses.GET, 'https://invalidlink.com', status=404)
-    resp = create_liquidCrawler_base._create_connection('https://invalidlink.com', render=False)
+    with pytest.warns(UserWarning):
+        resp = create_liquidCrawler_base._create_connection('https://invalidlink.com', render=False)
 
     assert resp is None
 

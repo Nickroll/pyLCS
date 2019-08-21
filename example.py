@@ -2,18 +2,15 @@
 
 import json
 
-from pyLCS import liquidCrawler, matchCrawler, parseMatchHist
+from pyLCS.pyLCS import LCS
 
-lc = liquidCrawler.liquidCrawler('na', 2019, 'Spring', False)
-links = lc.match_links()
-links = links[:3]
-
-json_data = matchCrawler.download_json_data(links)
+lcs_data = LCS(region='all', year=2019, split='spring', playoffs=True)
+lcs_data.match_history()
 
 unwanted = {'SKILL_LEVEL_UP', 'ITEM_DESTROYED', 'ITEM_SOLD', 'WARD_PLACED', 'WARD_KILL',
             'ITEM_UNDO', 'ITEM_PURCHASED'}
 
-merge = parseMatchHist.parse_match_history(json_data, 100, unwanted)
+output = lcs_data.parse_match_history(minute=15, unwanted_types=unwanted)
 
-with open('merge.json', 'w') as jf:
-    json.dump(merge, jf, indent=4)
+with open('json_dump.json', 'w') as jf:
+    json.dump(output, jf, indent=4)
