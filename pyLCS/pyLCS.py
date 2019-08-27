@@ -5,6 +5,7 @@ matchCrawler, and parseMatchHist for ease of use. Also contains a funciton which
 insertMongo.insert_into_mongoDB to insert the data into a mongoDB
 """
 
+import json
 from typing import List, Union
 
 from . import insertMongo, liquidCrawler, matchCrawler, parseMatchHist
@@ -39,7 +40,7 @@ class LCS(object):
         Downloads the JSON data using matchCrawler.download_json_data
         """
 
-        self._json_data = matchCrawler.download_json_data(self._match_links[:3])
+        self._json_data = matchCrawler.download_json_data(self._match_links)
 
     def get_json_data(self) -> dict:
         """get_json_data
@@ -90,7 +91,8 @@ def mongo_insert(merged_data: Union[str, List[dict]]=None, collection_set: str=N
     :param collection (str): The collection for insertion
     :rtype None
     """
-
-    insertMongo.insert_into_mongoDB(merged_data, collection_set, database, collection)
+    merged_data = json.dumps(merged_data)
+    formatted = json.loads(merged_data)
+    insertMongo.insert_into_mongoDB(formatted, collection_set, database, collection)
 
     return None

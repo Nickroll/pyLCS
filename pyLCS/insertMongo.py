@@ -14,7 +14,7 @@ def insert_into_mongoDB(merged_data: Union[str, List[dict]], collection_set: str
 
     :param merged_data (Union[str, List[dict]): The data from parseMatchHist.parse_match_history
     :param collection_set (str): One of players, team, or gameinfo
-    :param database (str): The database  to insert into
+    :param database (stre: The database  to insert into
     :param collection (str): The collection for insertion
     :rtype None
     """
