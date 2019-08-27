@@ -138,7 +138,7 @@ class liquidCrawler(object):
                 raise(pyLCSExceptions.PageEmptyError(f'The webpage for {el} is empty'
                                                      'one of region, year, or split is incorrect'))
 
-            links = r.html.xpath('//a[@title="Match History"]/@href')
+            links = r.html.xpath('//a[starts-with(@title, "Match History")]/@href')
 
             # Check for empty links and remove them
             for l in links:
@@ -148,8 +148,8 @@ class liquidCrawler(object):
                     ret_links.append(l)
 
             if len(ret_links) == 0:
-                raise(pyLCSExceptions.LinkLenError('Length of links retrieved was 0.'
-                                                   'Either extensions were not properly created or'
+                raise(pyLCSExceptions.LinkLenError('Length of links retrieved was 0. '
+                                                   'Either extensions were not properly created or '
                                                    'All hrefs were empty (xpath may be broken)'))
 
         return ret_links
