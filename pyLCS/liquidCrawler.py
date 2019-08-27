@@ -94,12 +94,30 @@ class liquidCrawler(object):
             ext = [f'{base_link}LEC/{self.year}/{self.split.capitalize()}/Group_Stage']
         elif self.region.lower() == 'academy':
             ext = [f'{base_link}LCS/Academy_League/{self.year}/{self.split.capitalize()}/Group_Stage']
+        elif self.region.lower() == 'lcl':
+            ext = [f'{base_link}LCL/{self.year}/{self.split.capitalize()}/Group_Stage']
+        elif self.region.lower() == 'ljl':
+            ext = [f'{base_link}LJL/{self.year}/{self.split.capitalize()}/Group_Stage']
+        elif self.region.lower() == 'lla':
+            ext = [f'{base_link}LLA/{self.year}/{self.split.capitalize()}/Group_Stage']
+        elif self.region.lower() == 'vcs':
+            ext = [f'{base_link}VCS/{self.year}/{self.split.capitalize()}/Group_Stage']
+        elif self.region.lower() == 'opl':
+            ext = [f'{base_link}OPL/{self.year}/{self.split.capitalize()}/Group_Stage']
+        elif self.region.lower() == 'tcl':
+            ext = [f'{base_link}TCL/{self.year}/{self.split.capitalize()}/Group_Stage']
         elif self.region.lower() == 'all':
             ext = [f'{base_link}LCS/{self.year}/{self.split.capitalize()}/Group_Stage',
                    f'{base_link}LCK/{self.year}/{self.split.capitalize()}/Group_Stage',
                    f'{base_link}LMS/{self.year}/{self.split.capitalize()}/Group_Stage',
                    f'{base_link}LEC/{self.year}/{self.split.capitalize()}/Group_Stage',
-                   f'{base_link}LCS/Academy_League/{self.year}/{self.split.capitalize()}/Group_Stage']
+                   f'{base_link}LCS/Academy_League/{self.year}/{self.split.capitalize()}/Group_Stage',
+                   f'{base_link}TCL/{self.year}/{self.split.capitalize()}/Group_Stage',
+                   f'{base_link}OPL/{self.year}/{self.split.capitalize()}/Group_Stage',
+                   f'{base_link}VCS/{self.year}/{self.split.capitalize()}/Group_Stage',
+                   f'{base_link}LLA/{self.year}/{self.split.capitalize()}/Group_Stage',
+                   f'{base_link}LJL/{self.year}/{self.split.capitalize()}/Group_Stage',
+                   f'{base_link}LCL/{self.year}/{self.split.capitalize()}/Group_Stage']
 
         else:
             raise pyLCSExceptions.RegionError(f'{self.region} is not one of LCS, LCK, LMS, '
