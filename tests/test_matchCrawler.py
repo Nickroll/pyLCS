@@ -5,7 +5,6 @@ import context
 import pytest
 import responses
 from hypothesis import given, settings
-from hypothesis import strategies as st
 from pyLCS.matchCrawler import (_create_json_links, _json_retrival,
                                 download_json_data)
 from pyLCS.strategies import match_strats
@@ -40,8 +39,8 @@ def test_create_json_links_warns_q(l):
     assert res == (None, None)
 
 
-# ISSUE: for some reason takes forever, maybe responses issue?
 @responses.activate
+# ISSUE: for some reason takes forever, seems to be a shrinking issue with hypothesis regex strat
 # @given(match_strats.valid_http_links())
 # @settings(max_examples=20, deadline=None)
 def test_json_retrival_returns_valid():
@@ -52,8 +51,8 @@ def test_json_retrival_returns_valid():
     assert res['playerstats'] == 10
 
 
-# ISSUE: for some reason takes forever, maybe responses issue?
 @responses.activate
+# ISSUE: for some reason takes forever, seems to be a shrinking issue with hypothesis regex strat
 # @given(match_strats.valid_http_links())
 # @settings(max_examples=20, deadline=None)
 def test_json_retrival_warns_invalid():
