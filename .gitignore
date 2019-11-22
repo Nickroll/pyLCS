@@ -118,3 +118,6 @@ venv.bak/
 
 # Personal files
 personal*
+
+# Coverage files
+term--missing*
