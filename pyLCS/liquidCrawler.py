@@ -108,7 +108,7 @@ class liquidCrawler(object):
             ext = [f'{base_link}TCL/{self.year}/{self.split.capitalize()}/Group_Stage']
         elif self.region.lower() == 'all':
             ext = []
-            spring_sum_regions = ['LCS', 'LCK', 'LEC', 'LJL', 'LCL', 'Academy_League', 'VCS', 'LMS']
+            spring_sum_regions = ['LCS', 'LCK', 'LEC', 'LJL', 'LCL', 'VCS', 'LMS']
             for r in spring_sum_regions:
                 tmp_list = [f'{base_link}{r}/{self.year}/Spring/Group_Stage',
                             f'{base_link}{r}/{self.year}/Summer/Group_Stage']
@@ -121,7 +121,8 @@ class liquidCrawler(object):
                 ext.extend(tmp_list)
 
             ext.extend([f'{base_link}LLA/{self.year}/Closing/Group_Stage', f'{base_link}LLA/{self.year}/Opening/Group_Stage',
-                        f'{base_link}OPL/{self.year}/Split_1/Group_Stage', f'{base_link}OPL/{self.year}/Split_1/Group_Stage'])
+                        f'{base_link}OPL/{self.year}/Split_1/Group_Stage', f'{base_link}OPL/{self.year}/Split_2/Group_Stage',
+                        f'{base_link}/LCS/Academy_League/{self.year}/Summer/Group_Stage', '{base_link}/LCS/Academy_League/{self.year}/Spring/Group_Stage'])
 
         else:
             raise pyLCSExceptions.RegionError(f'{self.region} is not one of LCS, LCK, LMS, '
@@ -154,7 +155,6 @@ class liquidCrawler(object):
             r = self._create_connection(url=el, render=render)
 
             if not r:
-                print(el)
                 raise(pyLCSExceptions.NoConnectionError('The connection returned was NoneType'))
 
             if not r.text:
