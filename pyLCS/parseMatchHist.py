@@ -139,7 +139,7 @@ def _format_timeLine_players(json_data: dict, minute: Union[int, str]) -> Union[
     :rtype Union[dict, None]
     """
 
-    tl_data = _test_for_key(json_data, ['Timeline','frames'])
+    tl_data = _test_for_key(json_data, ['Timeline', 'frames'])
 
     if tl_data is None:
         warn('JSON data did not contain Timeline or frames. Was the data from'
@@ -192,7 +192,7 @@ def _parse_event_data_players(json_data: dict, timeline_data: dict, minute: Unio
     :rtype Union[dict, None]
     """
 
-    frames = _test_for_key(json_data, ['Timeline','frames'])
+    frames = _test_for_key(json_data, ['Timeline', 'frames'])
 
     if frames is None:
         warn('JSON data did not contain Timeline or frames. Was the data from'
@@ -359,7 +359,7 @@ def parse_MH(json_data: List[dict], minute: Union[int, str], unwanted_types: Uni
     ret_list = list()
 
     for i in json_data:
-
+        # TODO: make max length its own function
         # Finding the max game length
         max_length = int(i['MatchHistory']['gameDuration'] / 60)
 
