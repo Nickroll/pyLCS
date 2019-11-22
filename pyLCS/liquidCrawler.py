@@ -83,7 +83,7 @@ class liquidCrawler(object):
 
         base_link = 'https://liquipedia.net/leagueoflegends/'
 
-        # Add ermering region support
+        # Add ermerging region support
         if self.region.lower() in ['na', 'lcs']:
             ext = [f'{base_link}LCS/{self.year}/{self.split.capitalize()}/Group_Stage']
         elif self.region.lower() in ['lck', 'korea']:
@@ -107,17 +107,21 @@ class liquidCrawler(object):
         elif self.region.lower() == 'tcl':
             ext = [f'{base_link}TCL/{self.year}/{self.split.capitalize()}/Group_Stage']
         elif self.region.lower() == 'all':
-            ext = [f'{base_link}LCS/{self.year}/{self.split.capitalize()}/Group_Stage',
-                   f'{base_link}LCK/{self.year}/{self.split.capitalize()}/Group_Stage',
-                   f'{base_link}LMS/{self.year}/{self.split.capitalize()}/Group_Stage',
-                   f'{base_link}LEC/{self.year}/{self.split.capitalize()}/Group_Stage',
-                   f'{base_link}LCS/Academy_League/{self.year}/{self.split.capitalize()}/Group_Stage',
-                   f'{base_link}TCL/{self.year}/{self.split.capitalize()}/Group_Stage',
-                   f'{base_link}OPL/{self.year}/{self.split.capitalize()}/Group_Stage',
-                   f'{base_link}VCS/{self.year}/{self.split.capitalize()}/Group_Stage',
-                   f'{base_link}LLA/{self.year}/{self.split.capitalize()}/Group_Stage',
-                   f'{base_link}LJL/{self.year}/{self.split.capitalize()}/Group_Stage',
-                   f'{base_link}LCL/{self.year}/{self.split.capitalize()}/Group_Stage']
+            ext = []
+            spring_sum_regions = ['LCS', 'LCK', 'LEC', 'LJL', 'LCL', 'Academy_League', 'VCS', 'LMS']
+            for r in spring_sum_regions:
+                tmp_list = [f'{base_link}{r}/{self.year}/Spring/Group_Stage',
+                            f'{base_link}{r}/{self.year}/Summer/Group_Stage']
+                ext.extend(tmp_list)
+
+            wint_sum_regions = ['TCL', 'CBLOL', 'BRCC']
+            for r in wint_sum_regions:
+                tmp_list = [f'{base_link}{r}/{self.year}/Winter/Group_Stage',
+                            f'{base_link}{r}/{self.year}/Summer/Group_Stage']
+                ext.extend(tmp_list)
+
+            ext.extend([f'{base_link}LLA/{self.year}/Closing/Group_Stage', f'{base_link}LLA/{self.year}/Opening/Group_Stage',
+                        f'{base_link}OPL/{self.year}/Split_1/Group_Stage', f'{base_link}OPL/{self.year}/Split_1/Group_Stage'])
 
         else:
             raise pyLCSExceptions.RegionError(f'{self.region} is not one of LCS, LCK, LMS, '
@@ -150,6 +154,7 @@ class liquidCrawler(object):
             r = self._create_connection(url=el, render=render)
 
             if not r:
+                print(el)
                 raise(pyLCSExceptions.NoConnectionError('The connection returned was NoneType'))
 
             if not r.text:

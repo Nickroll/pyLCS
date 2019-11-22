@@ -80,19 +80,33 @@ class LCS(object):
         return output_data
 
 
-def mongo_insert(merged_data: Union[str, List[dict]]=None, collection_set: str=None, database: str=None, collection: str=None) -> None:
+def _format_for_mongo_data(merged_data: Union[str, List[dict]]=None) -> dict:
+    """_format_for_mongo_data
+
+    :param merged_data (Union[str, List[dict]]): The data from parseMatchHist.parse_match_history
+    :rtype dict
+    """
+
+    merged_data = json.dumps(merged_data)
+    formatted = json.loads(merged_data)
+
+    return formatted
+
+
+def mongo_insert(merged_data: Union[str, List[dict]]=None, collection_set: str=None, database: str=None, collection: str=None, check: str=None) -> None:
     """mongo_insert
 
-    Insertes data returned by pyLCS.parse_match_history into a mongoDB collection
+    Insertes data returned by pyLCS.parse_match_history into a mongoDB collection, to be run with
+    known new data
 
     :param merged_data (Union[str, List[dict]): The data from parseMatchHist.parse_match_history
     :param collection_set (str): One of players, team, or gameinfo
     :param database (str): The database  to insert into
     :param collection (str): The collection for insertion
+    :param check (str): A string to use a check to ensure the document is not already in the collection
     :rtype None
     """
-    merged_data = json.dumps(merged_data)
-    formatted = json.loads(merged_data)
-    insertMongo.insert_into_mongoDB(formatted, collection_set, database, collection)
+    formatted = _format_for_mongo_data(merged_data)
+    insertMongo.insert_into_mongoDB(formatted, collection_set, database, collection, check)
 
     return None
