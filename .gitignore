@@ -120,4 +120,4 @@ venv.bak/
 personal*
 
 # Coverage files
-term--missing*
+htmlcov
