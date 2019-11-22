@@ -3,12 +3,30 @@
 Contains the funcitons necessary to parse the match history data returned by the matchCrawler set of
 functions. Data is returned in a JSON-like form.
 """
-
+import operator
 from collections import defaultdict
+from functools import reduce
 from typing import List, Union
 from warnings import warn
 
 from .exceptions import pyLCSExceptions
+
+
+def _test_for_key(data_dict: dict, key_list: list) -> Union[dict, None]:
+    """_test_for_key
+
+    Tests to see if the key is in the dict. If not it returns None
+
+    :param data_dict (dict): The dict to test for a given key
+    :param key_list (list): A list of keys to test
+    :rtype Union[dict, None]
+    """
+
+    try:
+        data = reduce(operator.getitem, key_list, data_dict)
+        return data
+    except Exception:
+        return None
 
 
 def _flatten_json(y: dict=None) -> dict:
@@ -20,6 +38,9 @@ def _flatten_json(y: dict=None) -> dict:
     :param y (dict): The JSON dict to be flattened
     :rtype dict
     """
+    if y is None:
+        return None
+
     out = dict()
 
     def flatten(x: Union[dict, list]=None, name: str=''):
@@ -57,17 +78,17 @@ def _format_matchHistory_players(json_data: dict) -> Union[dict, None]:
 
     return_dict = dict()
 
+    flat_mh = _flatten_json(_test_for_key(json_data, ['MatchHistory']))
+
+    if flat_mh is None:
+        warn('JSON data lacked a MatchHistory key meaning it was not returned by'
+             'matchCralwer.download_json_data, None returned')
+        return None
+
     # There should always be 10 players in a game, extra check
     if len(json_data['MatchHistory']['participantIdentities']) != 10:
         raise pyLCSExceptions.InvalidPlayerAmount('The number of players in the game is not 10'
                                                   f"it is {len(json_data['MatchHistory']['participantIdentities'])}")
-
-    try:
-        flat_mh = _flatten_json(json_data['MatchHistory'])
-    except KeyError:
-        warn('JSON data lacked a MatchHistory key meaning it was not returned by'
-             'matchCralwer.download_json_data, None returned')
-        return None
 
     for i in range(0, 10):
         key = f'participantIdentities_{i}_player_summonerName'
@@ -118,9 +139,9 @@ def _format_timeLine_players(json_data: dict, minute: Union[int, str]) -> Union[
     :rtype Union[dict, None]
     """
 
-    try:
-        tl_data = json_data['Timeline']['frames']
-    except KeyError:
+    tl_data = _test_for_key(json_data, ['Timeline','frames'])
+
+    if tl_data is None:
         warn('JSON data did not contain Timeline or frames. Was the data from'
              'matchCrawler.download_json_data. None returned')
         return None
@@ -171,11 +192,11 @@ def _parse_event_data_players(json_data: dict, timeline_data: dict, minute: Unio
     :rtype Union[dict, None]
     """
 
-    try:
-        frames = json_data['Timeline']['frames']
-    except KeyError:
-        warn('JSON data is missing Timeline and frame. Was the data created by'
-             'matchCrawler.download_json_data? None returned')
+    frames = _test_for_key(json_data, ['Timeline']['frames'])
+
+    if frames is None:
+        warn('JSON data did not contain Timeline or frames. Was the data from'
+             'matchCrawler.download_json_data. None returned')
         return None
 
     ids_to_name = _make_pid_name_dict(json_data)
@@ -236,9 +257,9 @@ def _game_information(json_data: dict) -> Union[dict, None]:
     :rtype Union[dict, None]
     """
 
-    try:
-        data = json_data['MatchHistory']
-    except KeyError:
+    data = _test_for_key(json_data, ['MatchHistory'])
+
+    if data is None:
         warn('JSON data did not have a MatchHistory key. Was it created by'
              'matchCrawler.download_json_data? None returned')
         return None
@@ -270,9 +291,9 @@ def _format_team_information(json_data: dict) -> Union[dict, None]:
     """
     ret_data = dict()
 
-    try:
-        data = json_data['MatchHistory']['teams']
-    except KeyError:
+    data = _test_for_key(json_data, ['MatchHistory', 'teams'])
+
+    if data is None:
         warn('JSON data did not have MatchHistory team information. Was the data created by'
              'matchCrawler.download_json_data? None returned')
         return None

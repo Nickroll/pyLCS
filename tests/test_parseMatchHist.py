@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import copy
 import json
 
 import context
@@ -101,6 +102,23 @@ def test_format_matchHistory_players_ret_dict_player_names():
     assert ret_dict['TL 8']['teamId'] == 'TL'
 
 
+def test_format_matchHistory_players_key_missing():
+    with pytest.warns(UserWarning):
+        ret_dict = parseMatchHist._format_matchHistory_players({'NoHist': 5})
+
+    assert ret_dict is None
+
+
+def test_format_matchHistory_players_name_key_missing():
+    local_min = copy.deepcopy(MIN_TEST)  # Ensure copy and not same reference
+    local_min['MatchHistory']['participantIdentities'][9]['player'].pop('summonerName')
+
+    with pytest.warns(UserWarning):
+        ret_dict = parseMatchHist._format_matchHistory_players(local_min)
+
+    assert ret_dict is None
+
+
 def test_format_timeLine_players_returns_dict(global_json):
     ret_dict = parseMatchHist._format_timeLine_players(global_json, 15)
 
@@ -118,6 +136,15 @@ def test_format_timeLine_players_returns_names(global_json):
 
     keys = list(ret_dict.keys())
     assert keys == ['TL Impact', 'TL Xmithie', 'TL Jensen', 'TL Doublelift', 'TL CoreJJ', 'C9 Licorice', 'C9 Svenskeren', 'C9 Nisqy', 'C9 Sneaky', 'C9 Zeyzal']
+
+
+def test_format_timeLine_players_timeline_or_frames_missing(global_json):
+    local_json = copy.deepcopy(global_json)  # Ensure seperate copy
+    local_json['Timeline'].pop('frames')
+    with pytest.warns(UserWarning):
+        ret_dict = parseMatchHist._format_timeLine_players(local_json, 15)
+
+    assert ret_dict is None
 
 
 PID_TEST_JSON = {'MatchHistory': {'participantIdentities':
