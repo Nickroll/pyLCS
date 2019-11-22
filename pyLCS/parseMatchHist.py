@@ -192,7 +192,7 @@ def _parse_event_data_players(json_data: dict, timeline_data: dict, minute: Unio
     :rtype Union[dict, None]
     """
 
-    frames = _test_for_key(json_data, ['Timeline']['frames'])
+    frames = _test_for_key(json_data, ['Timeline','frames'])
 
     if frames is None:
         warn('JSON data did not contain Timeline or frames. Was the data from'
