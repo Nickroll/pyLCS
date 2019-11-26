@@ -165,3 +165,10 @@ def test_pid_creations():
 
     assert pid_dict == dict(zip(range(0, 10), ['TL 0', 'TL 1', 'TL 2', 'TL 3', 'TL 4',
                                                'TL 5', 'TL 6', 'TL 7', 'TL 8', 'TL 9']))
+
+
+def test_parse_event_data_players_warn_none():
+    with pytest.warns(UserWarning):
+        ret = parseMatchHist._parse_event_data_players({}, {}, 15, [])
+
+    assert ret is None
