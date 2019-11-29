@@ -105,27 +105,27 @@ def test_retrieve_post_returns_linkLenError_href(create_liquidCrawler_base):
         create_liquidCrawler_base._retrieve_post_match_site_links(['http://test.com'], False)
 
 
-BAD_EXT_YEAR_LINK = 'https://liquipedia.net/leagueoflegends/LCS/100/Spring/Group_Stage'
-BAD_EXT_SPLIT_LINK = 'https://liquipedia.net/leagueoflegends/LCS/2019/Thisfailsduh/Group_Stage'
-
-
-@responses.activate
-def test_match_links_bad_year(create_liquidCrawler_base):
-    responses.add(responses.GET, BAD_EXT_YEAR_LINK, status=200,)
-    create_liquidCrawler_base.year = '100'
-
-    with pytest.raises(pyLCSExceptions.PageEmptyError):
-        create_liquidCrawler_base.match_links(render=False)
-
-
-@responses.activate
-def test_match_links_bad_split(create_liquidCrawler_base):
-    responses.add(responses.GET, BAD_EXT_SPLIT_LINK, status=200,)
-    create_liquidCrawler_base.split = 'Thisfailsduh'
-
-    with pytest.raises(pyLCSExceptions.PageEmptyError):
-        create_liquidCrawler_base.match_links(render=False)
-
+# BAD_EXT_YEAR_LINK = 'https://liquipedia.net/leagueoflegends/LCS/100/Spring/Group_Stage'
+# BAD_EXT_SPLIT_LINK = 'https://liquipedia.net/leagueoflegends/LCS/2019/Thisfailsduh/Group_Stage'
+#
+#
+# @responses.activate
+# def test_match_links_bad_year(create_liquidCrawler_base):
+#     responses.add(responses.GET, BAD_EXT_YEAR_LINK, status=200,)
+#     create_liquidCrawler_base.year = '100'
+#
+#     with pytest.raises(pyLCSExceptions.PageEmptyError):
+#         create_liquidCrawler_base.match_links(render=False)
+#
+#
+# @responses.activate
+# def test_match_links_bad_split(create_liquidCrawler_base):
+#     responses.add(responses.GET, BAD_EXT_SPLIT_LINK, status=200,)
+#     create_liquidCrawler_base.split = 'Thisfailsduh'
+#
+#     with pytest.raises(pyLCSExceptions.PageEmptyError):
+#         create_liquidCrawler_base.match_links(render=False)
+#
 
 @responses.activate
 def test_match_links_bad_region(create_liquidCrawler_base):

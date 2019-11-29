@@ -122,7 +122,7 @@ class liquidCrawler(object):
 
             ext.extend([f'{base_link}LLA/{self.year}/Closing/Group_Stage', f'{base_link}LLA/{self.year}/Opening/Group_Stage',
                         f'{base_link}OPL/{self.year}/Split_1/Group_Stage', f'{base_link}OPL/{self.year}/Split_2/Group_Stage',
-                        f'{base_link}/LCS/Academy_League/{self.year}/Summer/Group_Stage', '{base_link}/LCS/Academy_League/{self.year}/Spring/Group_Stage'])
+                        f'{base_link}LCS/Academy_League/{self.year}/Summer/Group_Stage', f'{base_link}LCS/Academy_League/{self.year}/Spring/Group_Stage'])
 
         else:
             raise pyLCSExceptions.RegionError(f'{self.region} is not one of LCS, LCK, LMS, '
@@ -155,11 +155,10 @@ class liquidCrawler(object):
             r = self._create_connection(url=el, render=render)
 
             if not r:
-                raise(pyLCSExceptions.NoConnectionError('The connection returned was NoneType'))
+                continue
 
             if not r.text:
-                raise(pyLCSExceptions.PageEmptyError(f'The webpage for {el} is empty'
-                                                     'one of region, year, or split is incorrect'))
+                continue
 
             links = r.html.xpath('//a[starts-with(@title, "Match History")]/@href')
 
