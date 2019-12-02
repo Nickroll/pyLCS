@@ -7,11 +7,11 @@ def valid_match_history_links():
     return st.from_regex(r'[^\s]*(ESPORTSTMNT)[^\s]*(\?)[^\s]*', fullmatch=True)
 
 
-def invalid_match_historoy_links_sports():
+def invalid_match_history_links_sports():
     return st.from_regex(r'[^\sE]*(?!ESPORTSTMNT)[^\sE]*(\?)[^\sE]*', fullmatch=True)
 
 
-def invalid_match_historoy_links_q():
+def invalid_match_history_links_q():
     return st.from_regex(r'[^\s\?]*(ESPORTSTMNT)[^\s\?]*', fullmatch=True)
 
 

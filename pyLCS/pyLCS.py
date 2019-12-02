@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 """
-Contains a LCS class which groups together all the funtions in insertMong, liquidCralwer,
-matchCrawler, and parseMatchHist for ease of use. Also contains a funciton which calls
-insertMongo.insert_into_mongoDB to insert the data into a mongoDB
+Contains a LCS class which groups together all the funtions in insert, matchHistory,
+downloadJson, and parse for ease of use. Also contains a funciton which calls
+insert.insert_into_mongoDB to insert the data into a mongoDB
 """
 
 import json
 from typing import List, Union
 
-from . import insertMongo, liquidCrawler, matchCrawler, parseMatchHist
+from . import downloadJson, insert, liquidCrawler, parseMatchHist
 
 
 class LCS(object):
 
     def __init__(self, region: str=None, year: Union[str, int]=None, split: str=None, playoffs: bool=False):
-        self._lc = liquidCrawler.liquidCrawler(region, year, split, playoffs)
+        self._lc = liquidCrawler.matchHistory(region, year, split, playoffs)
         self._region_type = type(region)
 
     def _match_link_gen(self):
@@ -37,10 +37,10 @@ class LCS(object):
     def _download_json(self):
         """_download_json
 
-        Downloads the JSON data using matchCrawler.download_json_data
+        Downloads the JSON data using downloadJson.download_json_data
         """
 
-        self._json_data = matchCrawler.download_json_data(self._match_links)
+        self._json_data = downloadJson.download_json_data(self._match_links)
 
     def get_json_data(self) -> dict:
         """get_json_data
@@ -65,7 +65,7 @@ class LCS(object):
     def parse_match_history(self, minute: Union[int, str]='max', unwanted_types: Union[set, list, tuple]=None) -> dict:
         """parse_match_history
 
-        Parse the match history datat that is returned by matchCrawler.download_json_data. The data is
+        Parse the match history datat that is returned by downloadJson.download_json_data. The data is
         returned as a list of dicts in a easier to read format and for insertion into a mongoDB. The
         dict contiains headings Player, Team, Game. The player info is 1 json-like object per player,
         team is the same per team, and game is just the game info.
@@ -107,6 +107,6 @@ def mongo_insert(merged_data: Union[str, List[dict]]=None, collection_set: str=N
     :rtype None
     """
     formatted = _format_for_mongo_data(merged_data)
-    insertMongo.insert_into_mongoDB(formatted, collection_set, database, collection, check)
+    insert.insert_into_mongoDB(formatted, collection_set, database, collection, check)
 
     return None

@@ -7,31 +7,31 @@ import responses
 from hypothesis import given
 from pyLCS.connection import create_connection
 from pyLCS.exceptions import pyLCSExceptions
-from pyLCS.liquidCrawler import liquidCrawler
-from pyLCS.strategies import liquid_strats
+from pyLCS.matchHistory import matchHistory
+from pyLCS.strategies import match_history_strats
 
 
 @pytest.fixture
-def create_liquidCrawler_base():
-    lc = liquidCrawler('na', 2019, 'spring', False)
+def create_matchHistory_base():
+    lc = matchHistory('na', 2019, 'spring', False)
 
     return lc
 
 
-@given(liquid_strats.build_liquidCrawler())
+@given(match_history_strats.build_matchHistory())
 def test_liquidCrawler_builds(b):
     pass
 
 
-@given(liquid_strats.man_build_liquidCrawler())
+@given(match_history_strats.man_build_matchHistory())
 def test_man_liquidCrawler_builds(t):
-    lc = liquidCrawler(t[0], t[1], t[2], t[3])
+    lc = matchHistory(t[0], t[1], t[2], t[3])
 
     assert isinstance(lc.year, str)
 
 
 @responses.activate
-def test_create_connection_valid(create_liquidCrawler_base):
+def test_create_connection_valid(create_matchHistory_base):
     responses.add(responses.GET, 'https://validlink.com', status=200)
     resp = create_connection('https://validlink.com', render=False)
 
@@ -39,14 +39,14 @@ def test_create_connection_valid(create_liquidCrawler_base):
 
 
 @responses.activate
-def test_create_connection_invalid(create_liquidCrawler_base):
+def test_create_connection_invalid(create_matchHistory_base):
     responses.add(responses.GET, 'https://invalidlink.com', status=404)
     resp = create_connection('https://invalidlink.com', render=False)
 
     assert resp is None
 
 
-@given(liquid_strats.build_validLiquidCrawler())
+@given(match_history_strats.build_validMatchHistory())
 def test_ext_creation_valid(lc):
     resp = lc._ext_link_creation()
 
@@ -59,12 +59,12 @@ def test_ext_creation_valid(lc):
         assert lc.split.capitalize() in resp[0]
 
 
-@given(liquid_strats.build_invalid_regions())
-def test_ext_creation_invalid_region(create_liquidCrawler_base, r):
-    create_liquidCrawler_base.region = r
+@given(match_history_strats.build_invalid_regions())
+def test_ext_creation_invalid_region(create_matchHistory_base, r):
+    create_matchHistory_base.region = r
 
     with pytest.raises(pyLCSExceptions.RegionError):
-        create_liquidCrawler_base._ext_link_creation()
+        create_matchHistory_base._ext_link_creation()
 
 
 HTML_BODY = '<html><body><a href="https://matchhistory.euw.leagueoflegends.com/en/#match-details/ESPORTSTMNT02/992625?gameHash=76f99e0eb8658976&amp;tab=overview" title="Match History" target="_blank" rel="nofollow noreferrer noopener"><img alt="Match History" src="/commons/images/c/ce/Match_Info_Stats.png" width="32" height="32"></a></body></html>'
@@ -76,33 +76,33 @@ FAIL_WITH_HREF = '<html><body><a href="" title="Match History"</a></body></html>
 
 
 @responses.activate
-def test_retrieve_post_returns_list(create_liquidCrawler_base):
+def test_retrieve_post_returns_list(create_matchHistory_base):
     responses.add(responses.GET, 'http://test.com', status=200, body=HTML_BODY)
-    links = create_liquidCrawler_base._retrieve_post_match_site_links(['http://test.com'], False)
+    links = create_matchHistory_base._retrieve_post_match_site_links(['http://test.com'], False)
 
     assert isinstance(links, list)
 
 
 @responses.activate
-def test_retrieve_post_returns_correct(create_liquidCrawler_base):
+def test_retrieve_post_returns_correct(create_matchHistory_base):
     responses.add(responses.GET, 'http://test.com', status=200, body=HTML_BODY)
-    links = create_liquidCrawler_base._retrieve_post_match_site_links(['http://test.com'], False)
+    links = create_matchHistory_base._retrieve_post_match_site_links(['http://test.com'], False)
 
     assert all(l in HTML_RETURN for l in links)
 
 
 @responses.activate
-def test_retrieve_post_returns_linkLenError(create_liquidCrawler_base):
+def test_retrieve_post_returns_linkLenError(create_matchHistory_base):
     responses.add(responses.GET, 'http://test.com', status=200, body=FAIL_BODY)
     with pytest.raises(pyLCSExceptions.LinkLenError):
-        create_liquidCrawler_base._retrieve_post_match_site_links(['http://test.com'], False)
+        create_matchHistory_base._retrieve_post_match_site_links(['http://test.com'], False)
 
 
 @responses.activate
-def test_retrieve_post_returns_linkLenError_href(create_liquidCrawler_base):
+def test_retrieve_post_returns_linkLenError_href(create_matchHistory_base):
     responses.add(responses.GET, 'http://test.com', status=200, body=FAIL_WITH_HREF)
     with pytest.raises(pyLCSExceptions.LinkLenError):
-        create_liquidCrawler_base._retrieve_post_match_site_links(['http://test.com'], False)
+        create_matchHistory_base._retrieve_post_match_site_links(['http://test.com'], False)
 
 
 # BAD_EXT_YEAR_LINK = 'https://liquipedia.net/leagueoflegends/LCS/100/Spring/Group_Stage'
@@ -110,35 +110,35 @@ def test_retrieve_post_returns_linkLenError_href(create_liquidCrawler_base):
 #
 #
 # @responses.activate
-# def test_match_links_bad_year(create_liquidCrawler_base):
+# def test_match_links_bad_year(create_matchHistory_base):
 #     responses.add(responses.GET, BAD_EXT_YEAR_LINK, status=200,)
-#     create_liquidCrawler_base.year = '100'
+#     create_matchHistory_base.year = '100'
 #
 #     with pytest.raises(pyLCSExceptions.PageEmptyError):
-#         create_liquidCrawler_base.match_links(render=False)
+#         create_matchHistory_base.match_links(render=False)
 #
 #
 # @responses.activate
-# def test_match_links_bad_split(create_liquidCrawler_base):
+# def test_match_links_bad_split(create_matchHistory_base):
 #     responses.add(responses.GET, BAD_EXT_SPLIT_LINK, status=200,)
-#     create_liquidCrawler_base.split = 'Thisfailsduh'
+#     create_matchHistory_base.split = 'Thisfailsduh'
 #
 #     with pytest.raises(pyLCSExceptions.PageEmptyError):
-#         create_liquidCrawler_base.match_links(render=False)
+#         create_matchHistory_base.match_links(render=False)
 #
 
 @responses.activate
-def test_match_links_bad_region(create_liquidCrawler_base):
-    create_liquidCrawler_base.region = 'notaregion'
+def test_match_links_bad_region(create_matchHistory_base):
+    create_matchHistory_base.region = 'notaregion'
 
     with pytest.raises(pyLCSExceptions.RegionError):
-        create_liquidCrawler_base.match_links(render=False)
+        create_matchHistory_base.match_links(render=False)
 
 
 TO_MOCK = 'https://liquipedia.net/leagueoflegends/LCS/2019/Spring/Group_Stage'
 @responses.activate
-def test_match_links_returns_list(create_liquidCrawler_base):
+def test_match_links_returns_list(create_matchHistory_base):
     responses.add(responses.GET, TO_MOCK, status=202, body=HTML_BODY)
-    links = create_liquidCrawler_base.match_links(render=False)
+    links = create_matchHistory_base.match_links(render=False)
 
     assert all(l in HTML_RETURN for l in links)

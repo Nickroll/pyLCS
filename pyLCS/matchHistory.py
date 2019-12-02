@@ -11,8 +11,8 @@ from .connection import create_connection
 from .exceptions import pyLCSExceptions
 
 
-class liquidCrawler(object):
-    """liquidCrawler
+class matchHistory(object):
+    """matchHistory
 
     Basic class for creating and retriving the post match history links from liquidpedia
     """

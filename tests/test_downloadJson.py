@@ -6,12 +6,12 @@ import pytest
 import responses
 from hypothesis import given, settings
 from pyLCS.connection import create_connection
-from pyLCS.matchCrawler import _create_json_links, download_json_data
-from pyLCS.strategies import match_strats
+from pyLCS.downloadJson import _create_json_links, download_json_data
+from pyLCS.strategies import json_links
 
 
 @settings(max_examples=200)
-@given(match_strats.valid_match_history_links())
+@given(json_links.valid_match_history_links())
 def test_create_json_links(l):
     res = _create_json_links(l)
 
@@ -22,7 +22,7 @@ def test_create_json_links(l):
 
 
 @settings(max_examples=200)
-@given(match_strats.invalid_match_historoy_links_sports())
+@given(json_links.invalid_match_history_links_sports())
 def test_create_json_links_warns_sports(l):
     with pytest.warns(UserWarning):
         res = _create_json_links(l)
@@ -31,7 +31,7 @@ def test_create_json_links_warns_sports(l):
 
 
 @settings(max_examples=200)
-@given(match_strats.invalid_match_historoy_links_q())
+@given(json_links.invalid_match_history_links_q())
 def test_create_json_links_warns_q(l):
     with pytest.warns(UserWarning):
         res = _create_json_links(l)
@@ -41,7 +41,7 @@ def test_create_json_links_warns_q(l):
 
 @responses.activate
 # ISSUE: for some reason takes forever, seems to be a shrinking issue with hypothesis regex strat
-# @given(match_strats.valid_http_links())
+# @given(json_links.valid_http_links())
 # @settings(max_examples=20, deadline=None)
 def test_json_retrival_returns_valid():
     responses.add(responses.GET, 'https://validjson.com', status=200, json={'playerstats': 10}, match_querystring=True)
@@ -53,7 +53,7 @@ def test_json_retrival_returns_valid():
 
 @responses.activate
 # ISSUE: for some reason takes forever, seems to be a shrinking issue with hypothesis regex strat
-# @given(match_strats.valid_http_links())
+# @given(json_links.valid_http_links())
 # @settings(max_examples=20, deadline=None)
 def test_json_retrival_is_none():
     responses.add(responses.GET, 'https://invalidjson.com', status=404, json={'playerstats': 19}, match_querystring=True)
