@@ -4,11 +4,10 @@ Contains the functions necessary to create the links to the JSON data from the m
 provided to it. The data is then downloaded in JSON form
 """
 
-from time import sleep
 from typing import Union
 from warnings import warn
 
-from requests_html import HTMLSession
+from .connection import create_connection
 
 
 def _create_json_links(link: str=None) -> Union[tuple, None]:
@@ -53,45 +52,6 @@ def _create_json_links(link: str=None) -> Union[tuple, None]:
         return (None, None)
 
 
-def _json_retrival(link: str=None) -> Union[dict, None]:
-    """_json_retrival
-
-    Retrieves the JSON form the link provided and returns the dicts in a list
-
-    :param link (str): The link to get the JSON data from
-    :rtype Union[dict, None]
-    """
-
-    session = HTMLSession()
-
-    # If link is None from  _create_json_links
-    if link is not None:
-        r = session.get(link)
-    else:
-        warn(f'Unable to retrieve data for {link}. None was inserted into response')
-        return None
-
-    if r.ok:
-        return r.json()
-
-    # One retry just incase of an internet hiccup
-    else:
-        warn('Unable to get a response, sleeping for 5 seconds and then re-trying link'
-             f'{link} after 5 seconds.')
-        sleep(5)
-        to_rerun = link
-
-    if to_rerun:
-        r = session.get(link)
-
-    if r.ok:
-        return r.json()
-    else:
-        # Cannot establish a connection to the site
-        warn(f'Unable to retrieve data for {link}. None was inserted into response')
-        return None
-
-
 def download_json_data(match_links: Union[list, str]=None) -> list:
     """download_json_data
 
@@ -111,8 +71,8 @@ def download_json_data(match_links: Union[list, str]=None) -> list:
         tmp_dict = dict()
         print(l)
         match_history, timelines = _create_json_links(l)
-        tmp_dict['MatchHistory'] = _json_retrival(match_history)
-        tmp_dict['Timeline'] = _json_retrival(timelines)
+        tmp_dict['MatchHistory'] = create_connection(match_history, json=True)
+        tmp_dict['Timeline'] = create_connection(timelines, json=True)
         return_list.append(tmp_dict)
 
     return return_list

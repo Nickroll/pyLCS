@@ -5,8 +5,8 @@ import context
 import pytest
 import responses
 from hypothesis import given, settings
-from pyLCS.matchCrawler import (_create_json_links, _json_retrival,
-                                download_json_data)
+from pyLCS.connection import create_connection
+from pyLCS.matchCrawler import _create_json_links, download_json_data
 from pyLCS.strategies import match_strats
 
 
@@ -45,7 +45,7 @@ def test_create_json_links_warns_q(l):
 # @settings(max_examples=20, deadline=None)
 def test_json_retrival_returns_valid():
     responses.add(responses.GET, 'https://validjson.com', status=200, json={'playerstats': 10}, match_querystring=True)
-    res = _json_retrival('https://validjson.com')
+    res = create_connection('https://validjson.com', json=True)
 
     assert isinstance(res, dict)
     assert res['playerstats'] == 10
@@ -55,10 +55,9 @@ def test_json_retrival_returns_valid():
 # ISSUE: for some reason takes forever, seems to be a shrinking issue with hypothesis regex strat
 # @given(match_strats.valid_http_links())
 # @settings(max_examples=20, deadline=None)
-def test_json_retrival_warns_invalid():
+def test_json_retrival_is_none():
     responses.add(responses.GET, 'https://invalidjson.com', status=404, json={'playerstats': 19}, match_querystring=True)
-    with pytest.warns(UserWarning):
-        resp = _json_retrival('https://invalidjson.com')
+    resp = create_connection('https://invalidjson.com', json=True)
 
     assert resp is None
 

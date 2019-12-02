@@ -5,6 +5,7 @@ import context
 import pytest
 import responses
 from hypothesis import given
+from pyLCS.connection import create_connection
 from pyLCS.exceptions import pyLCSExceptions
 from pyLCS.liquidCrawler import liquidCrawler
 from pyLCS.strategies import liquid_strats
@@ -32,7 +33,7 @@ def test_man_liquidCrawler_builds(t):
 @responses.activate
 def test_create_connection_valid(create_liquidCrawler_base):
     responses.add(responses.GET, 'https://validlink.com', status=200)
-    resp = create_liquidCrawler_base._create_connection('https://validlink.com', render=False)
+    resp = create_connection('https://validlink.com', render=False)
 
     assert resp is not None
 
@@ -40,8 +41,7 @@ def test_create_connection_valid(create_liquidCrawler_base):
 @responses.activate
 def test_create_connection_invalid(create_liquidCrawler_base):
     responses.add(responses.GET, 'https://invalidlink.com', status=404)
-    with pytest.warns(UserWarning):
-        resp = create_liquidCrawler_base._create_connection('https://invalidlink.com', render=False)
+    resp = create_connection('https://invalidlink.com', render=False)
 
     assert resp is None
 

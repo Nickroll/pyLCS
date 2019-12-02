@@ -5,12 +5,9 @@ Retrieves all the necessary game data from the liquidpedia game site. Finds the 
 history pages and returns them for use later.
 """
 
-from time import sleep
 from typing import Union
-from warnings import warn
 
-from requests_html import HTMLResponse, HTMLSession
-
+from .connection import create_connection
 from .exceptions import pyLCSExceptions
 
 
@@ -34,43 +31,6 @@ class liquidCrawler(object):
             self.playoffs = playoffs
         else:
             raise(TypeError('Playoffs must be of type bool'))
-
-    def _create_connection(self, url: str, render: bool) -> Union[HTMLResponse, None]:
-        """_create_connection
-
-        Establishes a requests connection to the given page and returns the requests object
-
-        :param url (str): The url to connect too.
-        :param render (bool): If the JS should be rendered or not.
-        :rtype Union[HTMLResponse, None]
-        """
-
-        session = HTMLSession()
-        if url is not None:
-            r = session.get(url)
-
-        if r.ok:
-            if render:
-                r.html.render()
-            return r
-
-        else:
-            warn('Unable to get a response, sleeping for 5 seconds and then re-trying link'
-                 f'{url} after 5 seconds.')
-            sleep(5)
-            to_rerun = url
-
-        if to_rerun:
-            r = session.get(url)
-            if render:
-                r.html.render()
-
-        if r.ok:
-            return r
-        else:
-            # Cannot establish a connection to the site
-            warn(f'Unable to retrieve data for {url}. None was inserted into response')
-            return None
 
     # TODO: Consider making this a self object instead of return
     def _ext_link_creation(self) -> Union[str, list]:
@@ -126,7 +86,8 @@ class liquidCrawler(object):
 
         else:
             raise pyLCSExceptions.RegionError(f'{self.region} is not one of LCS, LCK, LMS, '
-                                              'LEC, academy, or all')
+                                              'LEC, LCL, LJL, LLA, VCS, OPL, academy, '
+                                              'TCL, or all')
 
         if self.playoffs:
             p_ext = list()
@@ -152,7 +113,7 @@ class liquidCrawler(object):
         ret_links = []
 
         for el in ext_link:
-            r = self._create_connection(url=el, render=render)
+            r = create_connection(link=el, render=render)
 
             if not r:
                 continue

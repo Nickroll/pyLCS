@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import json
 import os
 
 from pyLCS.pyLCS import LCS, mongo_insert
@@ -13,13 +12,14 @@ try:
 except KeyError:
     raise Exception('Please make sure to set MONGO_USR, MONGO_PASS, and MONGO_EXTRA environment variables')
 
-lcs_data = LCS(region='all', year=2019, split='spring', playoffs=True)
+lcs_data = LCS(region='LLA', year=2019, split='Closing', playoffs=True)
 lcs_data.match_history()
 
 unwanted = {'SKILL_LEVEL_UP', 'ITEM_DESTROYED', 'ITEM_SOLD', 'WARD_PLACED', 'WARD_KILL',
             'ITEM_UNDO', 'ITEM_PURCHASED'}
 
-output = lcs_data.parse_match_history(minute=15, unwanted_types=unwanted)
+output = lcs_data.parse_match_history(minute='max', unwanted_types=unwanted)
+
 
 client = MongoClient(f'mongodb+srv://{usr}:{passw}@{extra}.mongodb.net/test?retryWrites=true&w=majority')
 db = client['test']

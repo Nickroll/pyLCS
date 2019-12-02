@@ -67,6 +67,27 @@ def _flatten_json(y: dict=None) -> dict:
     return out
 
 
+def _add_roles(return_dict: dict, player_name: str, i: int) -> dict:
+    """_add_roles
+
+    Since roles are broken on the match history this adds them manually
+
+    :param return_dict (dict): The dict to be retruned at the end of _format_matchHistory_players
+    :param player_name (str): The player name to get the role
+    :param i (int): The int corresponding to the players position
+    :rtype dict
+    """
+
+    role_dict = {0: 'Top', 1: 'Jungle', 2: 'Middle', 3: 'ADC', 4: 'Support'}
+
+    if i < 5:
+        return_dict[player_name] = {'role': role_dict[i]}
+    else:
+        return_dict[player_name] = {'role': role_dict[i - 5]}
+
+    return return_dict
+
+
 def _format_matchHistory_players(json_data: dict) -> Union[dict, None]:
     """_format_matchHistory_players
 
@@ -97,11 +118,7 @@ def _format_matchHistory_players(json_data: dict) -> Union[dict, None]:
             stats_key = f'ants_{i}_'
 
             # Since roles are broken we will add them manually
-            role_dict = {0: 'Top', 1: 'Jungle', 2: 'Middle', 3: 'ADC', 4: 'Support'}
-            if i < 5:
-                return_dict[player_name] = {'role': role_dict[i]}
-            else:
-                return_dict[player_name] = {'role': role_dict[i - 5]}
+            return_dict = _add_roles(return_dict, player_name, i)
 
             for k, v in flat_mh.items():
                 if stats_key in k.lower():
@@ -339,6 +356,35 @@ def _merge_formats_together(match_history: dict, event_data: dict, team: dict) -
     return game_info
 
 
+def _find_max_length(game_data: dict, minute: Union[int, str]) -> int:
+    """_find_max_length
+
+    Finds the max length of the game and returns it as an int
+
+    :param game_data (dict): The individual game data returned by matchCrawler.download_json_data
+    :param minute (Union[int, str]): The number of minutes to get data for
+    :rtype int
+    """
+
+    max_length = int(game_data['MatchHistory']['gameDuration'] / 60)
+
+    if isinstance(minute, str):
+        if minute.isnumeric():
+            minute = int(minute)
+        elif minute.lower() == 'max':
+            minute = max_length
+        else:
+            raise TypeError('Minute must be of type int or the string max')
+
+    if minute > max_length:
+        minute = max_length
+        warn('Minute provided was greater than the game length. Minute was set to the max game length')
+    elif minute < max_length:
+        minute += 1
+
+    return minute
+
+
 def parse_MH(json_data: List[dict], minute: Union[int, str], unwanted_types: Union[set, list]) -> dict:
     """parse_MH
 
@@ -359,25 +405,7 @@ def parse_MH(json_data: List[dict], minute: Union[int, str], unwanted_types: Uni
     ret_list = list()
 
     for i in json_data:
-        # TODO: make max length its own function
-        # Finding the max game length
-        max_length = int(i['MatchHistory']['gameDuration'] / 60)
-
-        if isinstance(minute, str):
-            if minute.isnumeric():
-                minute = int(minute)
-            elif minute.lower() == 'max':
-                minute = max_length
-            else:
-                raise TypeError('Minute must be of type int or the string max ')
-
-        # Handle longer than max length
-        if minute > max_length:
-            minute = max_length
-            warn(f'Minute provided was greater than the game length. Minute was set to the max game length')
-
-        elif minute < max_length:
-            minute += 1
+        minute = _find_max_length(i, minute)
 
         mh_data = _format_matchHistory_players(i)
         timeline_data = _format_timeLine_players(i, minute)
