@@ -8,13 +8,13 @@ insert.insert_into_mongoDB to insert the data into a mongoDB
 import json
 from typing import List, Union
 
-from . import downloadJson, insert, liquidCrawler, parseMatchHist
+from . import downloadJson, insert, matchHistory, parse
 
 
 class LCS(object):
 
     def __init__(self, region: str=None, year: Union[str, int]=None, split: str=None, playoffs: bool=False):
-        self._lc = liquidCrawler.matchHistory(region, year, split, playoffs)
+        self._lc = matchHistory.matchHistory(region, year, split, playoffs)
         self._region_type = type(region)
 
     def _match_link_gen(self):
@@ -75,7 +75,7 @@ class LCS(object):
         :rtype dict
         """
 
-        output_data = parseMatchHist.parse_MH(self._json_data, minute, unwanted_types)
+        output_data = parse.parse_MH(self._json_data, minute, unwanted_types)
 
         return output_data
 
@@ -83,7 +83,7 @@ class LCS(object):
 def _format_for_mongo_data(merged_data: Union[str, List[dict]]=None) -> dict:
     """_format_for_mongo_data
 
-    :param merged_data (Union[str, List[dict]]): The data from parseMatchHist.parse_match_history
+    :param merged_data (Union[str, List[dict]]): The data from parse.parse_match_history
     :rtype dict
     """
 
@@ -99,7 +99,7 @@ def mongo_insert(merged_data: Union[str, List[dict]]=None, collection_set: str=N
     Insertes data returned by pyLCS.parse_match_history into a mongoDB collection, to be run with
     known new data
 
-    :param merged_data (Union[str, List[dict]): The data from parseMatchHist.parse_match_history
+    :param merged_data (Union[str, List[dict]): The data from parse.parse_match_history
     :param collection_set (str): One of players, team, or gameinfo
     :param database (str): The database  to insert into
     :param collection (str): The collection for insertion

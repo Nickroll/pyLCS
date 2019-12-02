@@ -69,7 +69,6 @@ def download_json_data(match_links: Union[list, str]=None) -> list:
     for l in match_links:
 
         tmp_dict = dict()
-        print(l)
         match_history, timelines = _create_json_links(l)
         tmp_dict['MatchHistory'] = create_connection(match_history, json=True)
         tmp_dict['Timeline'] = create_connection(timelines, json=True)
