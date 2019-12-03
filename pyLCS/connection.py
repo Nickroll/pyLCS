@@ -6,8 +6,6 @@ from typing import Union
 
 from requests_html import HTMLResponse, HTMLSession
 
-ID_TOKEN = os.environ['ID_TOKEN']
-
 logging.basicConfig(filename='connection.log', filemode='w', level=logging.INFO, format='%(process)d-%(levelname)s\n%(message)s')
 
 
@@ -21,6 +19,8 @@ def create_connection(link: str=None, render: bool=False, json: bool=False) -> U
     :param json(bool): To return the JSON or not
     :rtype Union[None, HTMLResponse]
     """
+
+    ID_TOKEN = os.environ['ID_TOKEN']
 
     session = HTMLSession()
 

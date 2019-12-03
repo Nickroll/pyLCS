@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 import context
 import pytest
 import responses
@@ -8,6 +7,11 @@ from hypothesis import given, settings
 from pyLCS.connection import create_connection
 from pyLCS.downloadJson import _create_json_links, download_json_data
 from pyLCS.strategies import json_links
+
+
+@pytest.fixture
+def mock_env_id(monkeypatch):
+    monkeypatch.setenv('ID_TOKEN', 'Hi')
 
 
 @settings(max_examples=200)
@@ -43,7 +47,7 @@ def test_create_json_links_warns_q(l):
 # ISSUE: for some reason takes forever, seems to be a shrinking issue with hypothesis regex strat
 # @given(json_links.valid_http_links())
 # @settings(max_examples=20, deadline=None)
-def test_json_retrival_returns_valid():
+def test_json_retrival_returns_valid(mock_env_id):
     responses.add(responses.GET, 'https://validjson.com', status=200, json={'playerstats': 10}, match_querystring=True)
     res = create_connection('https://validjson.com', json=True)
 
@@ -55,7 +59,7 @@ def test_json_retrival_returns_valid():
 # ISSUE: for some reason takes forever, seems to be a shrinking issue with hypothesis regex strat
 # @given(json_links.valid_http_links())
 # @settings(max_examples=20, deadline=None)
-def test_json_retrival_is_none():
+def test_json_retrival_is_none(mock_env_id):
     responses.add(responses.GET, 'https://invalidjson.com', status=404, json={'playerstats': 19}, match_querystring=True)
     resp = create_connection('https://invalidjson.com', json=True)
 
@@ -68,7 +72,7 @@ MATCH_LINK_TEST = 'https://matchhistory.euw.leagueoflegends.com/en/#match-detail
 
 
 @responses.activate
-def test_download_works_with_list():
+def test_download_works_with_list(mock_env_id):
     responses.add(responses.GET, MH_JSON_LINK, status=200, json={'mhstats': 1})
     responses.add(responses.GET, TL_JSON_LINK, status=200, json={'tlstats': 1})
     resp = download_json_data([MATCH_LINK_TEST])
@@ -79,7 +83,7 @@ def test_download_works_with_list():
 
 
 @responses.activate
-def test_download_works_without_list():
+def test_download_works_without_list(mock_env_id):
     responses.add(responses.GET, MH_JSON_LINK, status=200, json={'mhstats': 1})
     responses.add(responses.GET, TL_JSON_LINK, status=200, json={'tlstats': 1})
     resp = download_json_data(MATCH_LINK_TEST)

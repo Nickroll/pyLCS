@@ -12,6 +12,11 @@ from pyLCS.strategies import match_history_strats
 
 
 @pytest.fixture
+def mock_env_id(monkeypatch):
+    monkeypatch.setenv('ID_TOKEN', 'Hi')
+
+
+@pytest.fixture
 def create_matchHistory_base():
     lc = matchHistory('na', 2019, 'spring', False)
 
@@ -31,7 +36,7 @@ def test_man_liquidCrawler_builds(t):
 
 
 @responses.activate
-def test_create_connection_valid(create_matchHistory_base):
+def test_create_connection_valid(create_matchHistory_base, mock_env_id):
     responses.add(responses.GET, 'https://validlink.com', status=200)
     resp = create_connection('https://validlink.com', render=False)
 
@@ -39,7 +44,7 @@ def test_create_connection_valid(create_matchHistory_base):
 
 
 @responses.activate
-def test_create_connection_invalid(create_matchHistory_base):
+def test_create_connection_invalid(create_matchHistory_base, mock_env_id):
     responses.add(responses.GET, 'https://invalidlink.com', status=404)
     resp = create_connection('https://invalidlink.com', render=False)
 
@@ -76,7 +81,7 @@ FAIL_WITH_HREF = '<html><body><a href="" title="Match History"</a></body></html>
 
 
 @responses.activate
-def test_retrieve_post_returns_list(create_matchHistory_base):
+def test_retrieve_post_returns_list(create_matchHistory_base, mock_env_id):
     responses.add(responses.GET, 'http://test.com', status=200, body=HTML_BODY)
     links = create_matchHistory_base._retrieve_post_match_site_links(['http://test.com'], False)
 
@@ -84,7 +89,7 @@ def test_retrieve_post_returns_list(create_matchHistory_base):
 
 
 @responses.activate
-def test_retrieve_post_returns_correct(create_matchHistory_base):
+def test_retrieve_post_returns_correct(create_matchHistory_base, mock_env_id):
     responses.add(responses.GET, 'http://test.com', status=200, body=HTML_BODY)
     links = create_matchHistory_base._retrieve_post_match_site_links(['http://test.com'], False)
 
@@ -92,14 +97,14 @@ def test_retrieve_post_returns_correct(create_matchHistory_base):
 
 
 @responses.activate
-def test_retrieve_post_returns_linkLenError(create_matchHistory_base):
+def test_retrieve_post_returns_linkLenError(create_matchHistory_base, mock_env_id):
     responses.add(responses.GET, 'http://test.com', status=200, body=FAIL_BODY)
     with pytest.raises(pyLCSExceptions.LinkLenError):
         create_matchHistory_base._retrieve_post_match_site_links(['http://test.com'], False)
 
 
 @responses.activate
-def test_retrieve_post_returns_linkLenError_href(create_matchHistory_base):
+def test_retrieve_post_returns_linkLenError_href(create_matchHistory_base, mock_env_id):
     responses.add(responses.GET, 'http://test.com', status=200, body=FAIL_WITH_HREF)
     with pytest.raises(pyLCSExceptions.LinkLenError):
         create_matchHistory_base._retrieve_post_match_site_links(['http://test.com'], False)
@@ -137,7 +142,7 @@ def test_match_links_bad_region(create_matchHistory_base):
 
 TO_MOCK = 'https://liquipedia.net/leagueoflegends/LCS/2019/Spring/Group_Stage'
 @responses.activate
-def test_match_links_returns_list(create_matchHistory_base):
+def test_match_links_returns_list(create_matchHistory_base, mock_env_id):
     responses.add(responses.GET, TO_MOCK, status=202, body=HTML_BODY)
     links = create_matchHistory_base.match_links(render=False)
 
