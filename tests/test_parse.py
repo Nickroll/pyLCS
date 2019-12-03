@@ -6,7 +6,7 @@ import json
 import context
 import pytest
 from hypothesis import assume, given
-from pyLCS import parse
+from pyLCS import mhParse
 from pyLCS.exceptions import pyLCSExceptions
 from pyLCS.strategies import parse_strats
 
@@ -14,7 +14,7 @@ from pyLCS.strategies import parse_strats
 @given(parse_strats.json_strat())
 def test_flatten_flattens(j):
     assume(j is not None)
-    flat = parse._flatten_json(j)
+    flat = mhParse._flatten_json(j)
 
     assert all(not isinstance(l, (dict, list, tuple)) for l in flat.values())
 
@@ -34,23 +34,23 @@ FAIL_JSON_TEST = {'MatchHistory': {'participantIdentities':
 
 def test_format_matchHistory_players_returns_error():
     with pytest.raises(pyLCSExceptions.InvalidPlayerAmount):
-        parse._format_matchHistory_players(FAIL_JSON_TEST)
+        mhParse._format_matchHistory_players(FAIL_JSON_TEST)
 
 
 def test_format_matchHistory_players_returns_valid(global_json):
-    ret_dict = parse._format_matchHistory_players(global_json)
+    ret_dict = mhParse._format_matchHistory_players(global_json)
 
     assert ret_dict != {}
 
 
 def test_format_matchHistory_players_returns_dict(global_json):
-    ret_dict = parse._format_matchHistory_players(global_json)
+    ret_dict = mhParse._format_matchHistory_players(global_json)
 
     assert isinstance(ret_dict, dict)
 
 
 def test_format_matchHistory_players_adds_correct_role(global_json):
-    ret_dict = parse._format_matchHistory_players(global_json)
+    ret_dict = mhParse._format_matchHistory_players(global_json)
 
     assert ret_dict['TL Impact']['role'] == 'Top'
     assert ret_dict['C9 Licorice']['role'] == 'Top'
@@ -94,7 +94,7 @@ MIN_TEST = {'MatchHistory': {'participantIdentities':
 
 
 def test_format_matchHistory_players_ret_dict_player_names():
-    ret_dict = parse._format_matchHistory_players(MIN_TEST)
+    ret_dict = mhParse._format_matchHistory_players(MIN_TEST)
 
     assert ret_dict['TL 0']['win'] is True
     assert ret_dict['TL 1']['level'] == 11
@@ -104,7 +104,7 @@ def test_format_matchHistory_players_ret_dict_player_names():
 
 def test_format_matchHistory_players_key_missing():
     with pytest.warns(UserWarning):
-        ret_dict = parse._format_matchHistory_players({'NoHist': 5})
+        ret_dict = mhParse._format_matchHistory_players({'NoHist': 5})
 
     assert ret_dict is None
 
@@ -114,25 +114,25 @@ def test_format_matchHistory_players_name_key_missing():
     local_min['MatchHistory']['participantIdentities'][9]['player'].pop('summonerName')
 
     with pytest.warns(UserWarning):
-        ret_dict = parse._format_matchHistory_players(local_min)
+        ret_dict = mhParse._format_matchHistory_players(local_min)
 
     assert ret_dict is None
 
 
 def test_format_timeLine_players_returns_dict(global_json):
-    ret_dict = parse._format_timeLine_players(global_json, 15)
+    ret_dict = mhParse._format_timeLine_players(global_json, 15)
 
     assert isinstance(ret_dict, dict)
 
 
 def test_format_timeLine_players_returns_correct(global_json):
-    ret_dict = parse._format_timeLine_players(global_json, 15)
+    ret_dict = mhParse._format_timeLine_players(global_json, 15)
 
     assert ret_dict['C9 Licorice'][3]['currentGold'] == 423
 
 
 def test_format_timeLine_players_returns_names(global_json):
-    ret_dict = parse._format_timeLine_players(global_json, 15)
+    ret_dict = mhParse._format_timeLine_players(global_json, 15)
 
     keys = list(ret_dict.keys())
     assert keys == ['TL Impact', 'TL Xmithie', 'TL Jensen', 'TL Doublelift', 'TL CoreJJ', 'C9 Licorice', 'C9 Svenskeren', 'C9 Nisqy', 'C9 Sneaky', 'C9 Zeyzal']
@@ -142,7 +142,7 @@ def test_format_timeLine_players_timeline_or_frames_missing(global_json):
     local_json = copy.deepcopy(global_json)  # Ensure seperate copy
     local_json['Timeline'].pop('frames')
     with pytest.warns(UserWarning):
-        ret_dict = parse._format_timeLine_players(local_json, 15)
+        ret_dict = mhParse._format_timeLine_players(local_json, 15)
 
     assert ret_dict is None
 
@@ -161,7 +161,7 @@ PID_TEST_JSON = {'MatchHistory': {'participantIdentities':
 
 
 def test_pid_creations():
-    pid_dict = parse._make_pid_name_dict(PID_TEST_JSON)
+    pid_dict = mhParse._make_pid_name_dict(PID_TEST_JSON)
 
     assert pid_dict == dict(zip(range(0, 10), ['TL 0', 'TL 1', 'TL 2', 'TL 3', 'TL 4',
                                                'TL 5', 'TL 6', 'TL 7', 'TL 8', 'TL 9']))
@@ -169,6 +169,6 @@ def test_pid_creations():
 
 def test_parse_event_data_players_warn_none():
     with pytest.warns(UserWarning):
-        ret = parse._parse_event_data_players({}, {}, 15, [])
+        ret = mhParse._parse_event_data_players({}, {}, 15, [])
 
     assert ret is None
