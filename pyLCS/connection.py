@@ -4,11 +4,15 @@ import logging
 import os
 from typing import Union
 
+from backoff import expo, on_exception
+from ratelimit import RateLimitException, limits
 from requests_html import HTMLResponse, HTMLSession
 
 logging.basicConfig(filename='connection.log', filemode='w', level=logging.INFO, format='%(process)d-%(levelname)s\n%(message)s')
 
 
+@on_exception(expo, RateLimitException, max_tries=8)
+@limits(calls=15, period=900)
 def create_connection(link: str=None, render: bool=False, json: bool=False) -> Union[None, HTMLResponse]:
     """create_connection
 
