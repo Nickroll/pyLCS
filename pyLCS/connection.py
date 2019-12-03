@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
+import logging
 import os
 from typing import Union
 
 from requests_html import HTMLResponse, HTMLSession
 
 ID_TOKEN = os.environ['ID_TOKEN']
+
+logging.basicConfig(filename='connection.log', filemode='w', level=logging.INFO, format='%(process)d-%(levelname)s\n%(message)s')
 
 
 def create_connection(link: str=None, render: bool=False, json: bool=False) -> Union[None, HTMLResponse]:
@@ -25,10 +28,7 @@ def create_connection(link: str=None, render: bool=False, json: bool=False) -> U
     r = session.get(link, cookies=cookies)
 
     if r.ok:
-        print(f'links: {link}')
-        print(f'Status: {r.status_code}')
-        print(r.headers)
-        print('---------------------- \n')
+        logging.info(f'Links: {link}\nStatus: {r.status_code}\n---------------------')
 
         if render:
             r.html.render()
@@ -40,12 +40,7 @@ def create_connection(link: str=None, render: bool=False, json: bool=False) -> U
             return r
 
     else:
-        print(f'links: {link}')
-        print(f'Status: {r.status_code}')
-        print(r.headers)
-        print(r.cookies)
-        print(r.text)
-        print('If status is 429 than the ID token needs to be regenerated from the login page.')
-        print('---------------------- \n')
-
+        logging.error(f'Links: {link}\nStatus: {r.status_code}\n{r.headers}\nID Token: {ID_TOKEN}\n'
+                      'If status is 429 than the ID token needs to be regenerated from the login page.\n'
+                      '-------------------------')
         return None
