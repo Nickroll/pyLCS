@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 
-import logging
 import os
 from typing import Union
 
 from backoff import expo, on_exception
 from ratelimit import RateLimitException, limits
 from requests_html import HTMLResponse, HTMLSession
-
-logging.basicConfig(filename='connection.log', filemode='w', level=logging.INFO, format='%(process)d-%(levelname)s\n%(message)s')
 
 
 @on_exception(expo, RateLimitException, max_tries=8)
@@ -32,7 +29,7 @@ def create_connection(link: str=None, render: bool=False, json: bool=False) -> U
     r = session.get(link, cookies=cookies)
 
     if r.ok:
-        logging.info(f'Links: {link}\nStatus: {r.status_code}\n---------------------')
+        print(f'Links: {link}\nStatus: {r.status_code}\n---------------------')
 
         if render:
             r.html.render()
@@ -44,7 +41,7 @@ def create_connection(link: str=None, render: bool=False, json: bool=False) -> U
             return r
 
     else:
-        logging.error(f'Links: {link}\nStatus: {r.status_code}\n{r.headers}\nID Token: {ID_TOKEN}\n'
-                      'If status is 429 than the ID token needs to be regenerated from the login page.\n'
-                      '-------------------------')
+        print(f'Links: {link}\nStatus: {r.status_code}\n{r.headers}\nID Token: {ID_TOKEN}\n'
+              'If status is 429 than the ID token needs to be regenerated from the login page.\n'
+              '-------------------------')
         return None
