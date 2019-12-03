@@ -53,7 +53,7 @@ def create_connection(link: str=None, render: bool=False, json: bool=False) -> U
 
     if r.ok:
         print(f'links: {link}')
-        print(r.status_code)
+        print(f'Status: {r.status_code}')
         print(headers)
         print('---------------------- \n')
 
@@ -68,7 +68,7 @@ def create_connection(link: str=None, render: bool=False, json: bool=False) -> U
 
     else:
         print(f'links: {link}')
-        print(r.status_code)
+        print(f'Status: {r.status_code}')
         print(headers)
         print(r.text)
         print('---------------------- \n')

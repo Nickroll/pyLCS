@@ -118,6 +118,7 @@ venv.bak/
 
 # Personal files
 personal*
-
+cookie.ini
 # Coverage files
 htmlcov
+
