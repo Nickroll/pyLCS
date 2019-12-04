@@ -43,7 +43,7 @@ class matchHistory(object):
 
         base_link = 'https://liquipedia.net/leagueoflegends/'
 
-        # Add ermerging region support
+        # Make a dict for clearner code
         if self.region.lower() in ['na', 'lcs']:
             ext = [f'{base_link}LCS/{self.year}/{self.split.capitalize()}/Group_Stage']
         elif self.region.lower() in ['lck', 'korea']:
@@ -66,6 +66,11 @@ class matchHistory(object):
             ext = [f'{base_link}OPL/{self.year}/{self.split.capitalize()}/Group_Stage']
         elif self.region.lower() == 'tcl':
             ext = [f'{base_link}TCL/{self.year}/{self.split.capitalize()}/Group_Stage']
+        elif self.region.lower() == 'cblol':
+            ext = [f'{base_link}CBLOL/{self.year}/{self.split.capitalize()}/Group_Stage']
+        elif self.region.lower() == 'brcc':
+            ext = [f'{base_link}BRCC/{self.year}/{self.split.capitalize()}/Group_Stage']
+
         elif self.region.lower() == 'all':
             ext = []
             spring_sum_regions = ['LCS', 'LCK', 'LEC', 'LJL', 'LCL', 'VCS', 'LMS']
