@@ -106,6 +106,8 @@ def mongo_insert(merged_data: Union[str, List[dict]]=None, collection_set: str=N
     :param check (str): A string to use a check to ensure the document is not already in the collection
     :rtype None
     """
+
+    print('Inserting Documents')
     formatted = _format_for_mongo_data(merged_data)
     insert.insert_into_mongoDB(formatted, collection_set, database, collection, check)
 
