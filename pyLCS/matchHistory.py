@@ -32,7 +32,7 @@ class matchHistory(object):
         else:
             raise(TypeError('Playoffs must be of type bool'))
 
-    # TODO: Consider making this a self object instead of return
+    # TODO: Make this read from a config file of some sort
     def _ext_link_creation(self) -> Union[str, list]:
         """_post_match_game_links
 

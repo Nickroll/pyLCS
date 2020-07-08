@@ -12,7 +12,7 @@ try:
 except KeyError:
     raise Exception('Please make sure to set MONGO_USR, MONGO_PASS, and MONGO_EXTRA environment variables')
 
-lcs_data = LCS(region='LLA', year=2019, split='Closing', playoffs=True)
+lcs_data = LCS(region='LCS', year=2020, split='Summer', playoffs=True)
 lcs_data.match_history()
 
 unwanted = {'SKILL_LEVEL_UP', 'ITEM_DESTROYED', 'ITEM_SOLD', 'WARD_PLACED', 'WARD_KILL',

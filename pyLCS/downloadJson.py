@@ -75,3 +75,4 @@ def download_json_data(match_links: Union[list, str]=None) -> list:
         return_list.append(tmp_dict)
 
     return return_list
+
