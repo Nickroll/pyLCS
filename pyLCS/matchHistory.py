@@ -12,18 +12,19 @@ from .exceptions import pyLCSExceptions
 
 
 # TODO: Make this read from a config file of some sort
-def _ext_link_creation() -> list:
+def _ext_link_creation(config_path: str) -> list:
     """_post_match_game_links
 
-    Uses liquidpedia to retrieve the links to the post match game links for the given region
+    Creates the links to liquipedia pages
 
+    :param config_path (str): The path to the config.ini file
     :rtype Union[list]
     """
 
     link_list = list()
 
     config = configparser.ConfigParser()
-    config.read('config.ini')
+    config.read(config_path)
     parse_dict = {sec: dict(config.items(sec)) for sec in config.sections()}
 
     base = parse_dict['Links']['base']
@@ -88,16 +89,17 @@ def _retrieve_post_match_site_links(ext_link: list, render: bool) -> list:
     return ret_links
 
 
-def match_links(render: bool=True) -> list:
+def match_links(config_path: str, render: bool=True) -> list:
     """match_links
 
     Retrieves the links to the match history pages from the liquidpedia website.
 
+    :param config_path (str): The path to the config.ini file
     :param render (bool): If JavaScript should be rendered on the page
     :rtype list
     """
 
-    exts = _ext_link_creation()
+    exts = _ext_link_creation(config_path)
     links = _retrieve_post_match_site_links(ext_link=exts, render=render)
 
     return links

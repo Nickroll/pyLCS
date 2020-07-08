@@ -13,9 +13,8 @@ from . import downloadJson, insert, matchHistory, mhParse
 
 class LCS(object):
 
-    def __init__(self, region: str=None, year: Union[str, int]=None, split: str=None, playoffs: bool=False):
-        self._lc = matchHistory.matchHistory(region, year, split, playoffs)
-        self._region_type = type(region)
+    def __init__(self, config_path: str='config.ini'):
+        self._config_path = config_path
 
     def _match_link_gen(self):
         """_match_link_gen
@@ -23,7 +22,7 @@ class LCS(object):
         Generates the match links using liquidCrawler.match_links
         """
 
-        self._match_links = self._lc.match_links()
+        self._match_links = matchHistory.match_links(self._config_path)
 
     def get_match_links(self) -> list:
         """match_links
