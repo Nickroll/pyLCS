@@ -7,7 +7,8 @@ parseMatchHist.parse_match_history().
 from typing import List, Union
 
 
-def insert_into_mongoDB(merged_data: Union[str, List[dict]], collection_set: str, database: str, collection: str, check: str) -> None:
+def insert_into_mongoDB(merged_data: Union[str, List[dict]], collection_set: str, database: str,
+                        collection: str, check: str) -> None:
     """insert_into_mongoDB
 
     Insertes data returned by parseMatchHist.parse_match_history into a mongoDB collection

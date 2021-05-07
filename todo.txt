@@ -1,0 +1,7 @@
+
+# Update so save position of last sucessful run
+        - Save as file and only keep if bad exit code
+
+# Update test writing for new INI file
+        - No longer a class
+        - Uses ini file

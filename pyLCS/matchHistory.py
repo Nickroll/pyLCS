@@ -5,7 +5,6 @@ Retrieves all the necessary game data from the liquidpedia game site. Finds the 
 history pages and returns them for use later.
 """
 
-from typing import Union
 import configparser
 from .connection import create_connection
 from .exceptions import pyLCSExceptions
@@ -103,4 +102,3 @@ def match_links(config_path: str, render: bool=True) -> list:
     links = _retrieve_post_match_site_links(ext_link=exts, render=render)
 
     return links
-
