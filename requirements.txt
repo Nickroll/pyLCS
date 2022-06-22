@@ -22,7 +22,7 @@ mkl-fft==1.0.12
 mkl-random==1.0.2
 more-itertools==7.0.0
 msgpack==0.6.1
-numpy==1.16.3
+numpy==1.22.0
 pandas==0.24.2
 parse==1.12.0
 parso==0.4.0
